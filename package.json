@@ -1,0 +1,10 @@
+{
+  "name": "visionflow-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "VisionFlow AI — real text-to-image and text-to-video generation via fal.ai, with a secure serverless backend.",
+  "engines": {
+    "node": ">=18"
+  }
+}
