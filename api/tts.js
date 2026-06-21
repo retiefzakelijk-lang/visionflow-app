@@ -7,8 +7,9 @@ const TTS_MODEL = process.env.FAL_TTS_MODEL || "fal-ai/gemini-tts";
 // Voices supported by Gemini TTS. If you switch TTS_MODEL, update this list to
 // match that model's voice names (see its page on https://fal.ai/models).
 const VOICES = [
-  "Kore", "Puck", "Charon", "Zephyr", "Aoede",
-  "Fenrir", "Leda", "Orus", "Achernar", "Algenib",
+  "Zephyr","Puck","Charon","Kore","Fenrir","Leda","Orus","Aoede","Callirrhoe","Autonoe",
+  "Enceladus","Iapetus","Umbriel","Algieba","Despina","Erinome","Algenib","Rasalgethi","Laomedeia","Achernar",
+  "Alnilam","Schedar","Gacrux","Pulcherrima","Achird","Zubenelgenubi","Vindemiatrix","Sadachbia","Sadaltager","Sulafat",
 ];
 
 const HITS = new Map();
