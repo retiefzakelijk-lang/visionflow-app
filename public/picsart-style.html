@@ -162,9 +162,12 @@ header.nav{position:sticky;top:0;z-index:100;background:rgba(10,8,19,.8);backdro
 .sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.3s var(--ease)}
 .sw.on i{left:25px}
 .save{font-size:11.5px;font-weight:700;color:var(--green);background:rgba(22,199,132,.14);padding:3px 9px;border-radius:100px}
-.price-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:stretch}
-@media(max-width:980px){.price-grid{grid-template-columns:repeat(2,1fr)}}
+.price-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:stretch}
+@media(max-width:1100px){.price-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.price-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.price-grid{grid-template-columns:1fr}}
+.pcard.best{border-color:transparent;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,#16c784,#06b6d4) border-box;border:2px solid transparent;position:relative}
+.pcard.best::before{content:"Best Value";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#16c784,#06b6d4);color:#04130d;font-size:11.5px;font-weight:800;padding:5px 14px;border-radius:100px;white-space:nowrap}
 .pcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius-lg);padding:26px;display:flex;flex-direction:column;transition:.26s var(--ease)}
 .pcard:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
 .pcard.hot{border-color:transparent;background:linear-gradient(var(--card),var(--card)) padding-box,var(--grad) border-box;border:2px solid transparent;position:relative}
@@ -728,20 +731,21 @@ document.getElementById('sendBtn').addEventListener('click',function(){var p=doc
 
 /* pricing */
 var plans=[
- {n:'Free',d:'For trying out AI creation.',m:0,y:0,credits:'25 credits / month',f:['~6 image generations','~4 short AI videos','Basic editor & templates','Standard queue · watermark']},
- {n:'Pro',d:'AI tools for everyday creative work.',m:15,y:10.5,credits:'500 credits / month',f:['~125 Nano Banana Pro generations','~83 Kling 3.0 videos','All AI tools & 140+ models','HD · no watermark · commercial use'],hot:true},
- {n:'Ultra',d:'Heavy AI usage for creators & teams.',m:75,y:52.5,seat:true,credits:'2,500 credits / month',f:['~625 Nano Banana Pro generations','~416 Kling 3.0 videos','Everything in Pro','Team workspaces · per seat']},
- {n:'Enterprise',d:'Custom AI for large organizations.',m:-1,y:-1,credits:'Custom credit volume',f:['Volume discounts on credit rate','On-demand top-ups','Flexible billing terms','SSO, SLA & dedicated support']}
+ {n:'Starter',d:'For getting started with AI.',m:12.99,y:9.99,credits:'400 credits / month',f:['~100 AI images','~66 AI videos','All AI tools & 140+ models','HD · no watermark']},
+ {n:'Pro',d:'For everyday creators.',m:24.99,y:19.99,credits:'900 credits / month',f:['~225 AI images','~150 AI videos','Talking characters & avatars','Commercial use'],hot:true},
+ {n:'Ultra',d:'For power users & teams.',m:49.99,y:39.99,credits:'2,000 credits / month',f:['~500 AI images','~333 AI videos','Priority render queue','Team workspaces']},
+ {n:'Max',d:'For studios & heavy usage.',m:99.99,y:79.99,credits:'5,000 credits / month',f:['~1,250 AI images','~833 AI videos','Highest priority + API access','Brand kits & bulk edit']},
+ {n:'Lifetime',d:'Pay once. Create forever.',life:200,credits:'1,500 credits / month — for life',f:['~375 AI images every month','~250 AI videos every month','One-time payment · no subscription','All Pro features, forever'],best:true}
 ];
 function renderPriceInto(id,yearly){document.getElementById(id).innerHTML=plans.map(function(p){
   var priceHtml;
-  if(p.m<0){priceHtml='<div class="amt">Custom</div>';}
-  else{var v=yearly?p.y:p.m;var was=(yearly&&p.m>0)?'<span style="text-decoration:line-through;color:var(--ink-3);font-size:18px;margin-right:8px">$'+p.m+'</span>':'';priceHtml='<div class="amt">'+was+'$'+v+'<small>/mo'+(p.seat?' · seat':'')+'</small></div>'+(yearly&&p.m>0?'<div style="font-size:12px;color:var(--ink-3);margin-top:2px">billed yearly</div>':'');}
-  return '<div class="pcard'+(p.hot?' hot':'')+'"><div class="pn">'+p.n+'</div><div class="pd">'+p.d+'</div>'+
-    '<div style="display:flex;align-items:center;gap:7px;font-weight:700;font-size:14px;margin-bottom:14px"><span style="color:var(--pink)">✦</span>'+p.credits+'</div>'+
+  if(p.life){priceHtml='<div class="amt">$'+p.life+'<small> once</small></div><div style="font-size:12px;color:var(--green);margin-top:2px;font-weight:700">Pay once · yours forever</div>';}
+  else{var v=yearly?p.y:p.m;var was=yearly?'<span style="text-decoration:line-through;color:var(--ink-3);font-size:18px;margin-right:8px">$'+p.m+'</span>':'';priceHtml='<div class="amt">'+was+'$'+v+'<small>/mo</small></div>'+(yearly?'<div style="font-size:12px;color:var(--ink-3);margin-top:2px">billed yearly</div>':'');}
+  return '<div class="pcard'+(p.hot?' hot':'')+(p.best?' best':'')+'"><div class="pn">'+p.n+'</div><div class="pd">'+p.d+'</div>'+
+    '<div style="display:flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px;margin-bottom:14px"><span style="color:var(--pink)">✦</span>'+p.credits+'</div>'+
     priceHtml+
     '<ul>'+p.f.map(function(x){return '<li><span class="ck">✓</span>'+x+'</li>';}).join('')+'</ul>'+
-    '<button class="btn '+(p.hot?'btn-grad':'btn-out')+'" data-go="'+(p.m<0?'/business':'/signup')+'">'+(p.n==='Free'?'Get started':(p.m<0?'Contact sales':'Choose '+p.n))+'</button></div>';
+    '<button class="btn '+(p.hot||p.best?'btn-grad':'btn-out')+'" data-go="/signup">'+(p.life?'Get Lifetime':'Choose '+p.n)+'</button></div>';
 }).join('');}
 renderPriceInto('priceGrid',false);
 document.getElementById('bsw').addEventListener('click',function(){this.classList.toggle('on');renderPriceInto('priceGrid',this.classList.contains('on'));});
