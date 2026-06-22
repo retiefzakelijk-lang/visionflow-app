@@ -389,7 +389,12 @@ function grad(){var p=pals[Math.floor(Math.random()*pals.length)];return 'linear
 /* lazy video: load + play only when on-screen, pause when off-screen (huge perf win) */
 var lazyVidIO=new IntersectionObserver(function(es){es.forEach(function(e){var v=e.target;if(e.isIntersecting){if(!v.poster&&v.dataset.poster)v.poster=v.dataset.poster;if(!v.src&&v.dataset.src)v.src=v.dataset.src;var p=v.play&&v.play();if(p&&p.catch)p.catch(function(){});}else{try{v.pause();}catch(_){}}});},{rootMargin:'250px'});
 function posterFor(src){var cols=[['#ff2e93','#7b2ff7'],['#ffb020','#ff2e93'],['#06b6d4','#3b82f6'],['#9b51e0','#3b82f6'],['#c211c8','#ff5fa2'],['#16c784','#06b6d4']];var s=(src||'x');var p=cols[Math.abs(s.length+(s.charCodeAt(2)||0))%cols.length];var svg='<svg xmlns="http://www.w3.org/2000/svg" width="36" height="48"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+p[0]+'"/><stop offset="1" stop-color="'+p[1]+'"/></linearGradient></defs><rect width="36" height="48" fill="url(#g)"/></svg>';return 'data:image/svg+xml,'+encodeURIComponent(svg);}
-function lazyVideo(src,poster){var v=document.createElement('video');v.className='m';v.loop=true;v.muted=true;v.setAttribute('muted','');v.setAttribute('playsinline','');v.playsInline=true;v.preload='none';v.poster=poster||posterFor(src);v.dataset.src=src;v.onerror=function(){v.remove();};lazyVidIO.observe(v);return v;}
+function lazyVideo(src,poster){var v=document.createElement('video');v.className='m';v.loop=true;v.muted=true;v.setAttribute('muted','');v.setAttribute('playsinline','');v.playsInline=true;v.preload='none';v.poster=poster||posterFor(src);v.dataset.src=src;v.onerror=function(){v.remove();};
+  function on(){if(!v.src)v.src=v.dataset.src;var p=v.play&&v.play();if(p&&p.catch)p.catch(function(){});}
+  function off(){try{v.pause();}catch(_){}}
+  v.addEventListener('mouseenter',on);
+  requestAnimationFrame(function(){var c=v.closest&&v.closest('.pcardx,.vtile,.tpl,.fm,.media-wrap,.band-media,.tprev');if(c){c.addEventListener('mouseenter',on);c.addEventListener('mouseleave',off);}else{v.addEventListener('mouseleave',off);}});
+  return v;}
 function imgEl(n,cls){var im=document.createElement('img');im.className='m '+(cls||'');im.referrerPolicy='no-referrer';im.loading='lazy';im.decoding='async';im.alt='';im.src=person(n);im.onerror=function(){im.remove();};return im;}
 function vidEl(i,cls){var v=lazyVideo(vidsrc(i));if(cls)v.className='m '+cls;return v;}
 function themedStack(el,kw,seed){if(!el)return;el.style.background=grad();var th=document.createElement('img');th.className='m kb';th.referrerPolicy='no-referrer';th.loading='lazy';th.decoding='async';th.alt='';th.src=themeImg(kw,seed);th.onerror=function(){th.remove();};el.appendChild(th);}
@@ -653,9 +658,9 @@ var REAL_VIBE={
 };
 (function(){var g=document.getElementById('vgrid');g.innerHTML='';vibes.forEach(function(t,i){var d=document.createElement('div');d.className='vtile';d.setAttribute('data-go',t[2]);var real=REAL_VIBE[t[0]];if(real){d.style.background='#000';d.appendChild(realVid(real));}else{themedStack(d,t[1],i+60);if(i%2===0)d.appendChild(vidEl(i));}d.insertAdjacentHTML('beforeend','<div class="ov"></div><div class="play">▶</div><div class="t">'+t[0]+'<span>'+(real?'✦ Real AI video':'Try this vibe')+'</span></div>');g.appendChild(d);});})();
 
-fillMedia(document.getElementById('fmTalk'),{i:9,kw:'strawberry,banana,fruit',video:false});
-fillMedia(document.getElementById('fmVideo'),{i:1,video:true});
-fillMedia(document.getElementById('bandMedia'),{i:12,video:true});
+(function(){var f=document.getElementById('fmTalk');if(f){f.style.background=grad();f.appendChild(realVid('https://v3b.fal.media/files/b/0a9f3b1e/4qAH21Io7xW-1d0132Hh4_output.mp4'));}})();
+(function(){var f=document.getElementById('fmVideo');if(f){f.style.background=grad();f.appendChild(realVid('https://v3b.fal.media/files/b/0a9f3b21/TQ4LsN5XP26PYu_Qkr5m2_output.mp4'));}})();
+(function(){var f=document.getElementById('bandMedia');if(f){f.style.background=grad();f.appendChild(realVid('https://v3b.fal.media/files/b/0a9f3bc7/eELi8DL8zg8bzsPemUSf7_output.mp4'));}})();
 
 var tplCats0=['All','Instagram','TikTok','YouTube','Avatars','Posters','Business'];
 document.getElementById('tplFilters').innerHTML=tplCats0.map(function(c,i){return '<button class="tf'+(i===0?' active':'')+'">'+c+'</button>';}).join('');
