@@ -351,7 +351,7 @@ footer{background:var(--bg-2);padding:60px 0 34px;margin-top:70px;border-top:1px
   </div></section>
 
   <section class="sec wrap" id="pricing">
-    <div class="sec-head reveal"><span class="eyebrow">Pricing</span><h2>Plans for every creator</h2><p>Credits power every AI generation — about <b>4 credits per image</b> and <b>6 per video</b>. Credits refresh monthly.</p></div>
+    <div class="sec-head reveal"><span class="eyebrow">Pricing</span><h2>Plans for every creator</h2><p>Every plan includes a set number of <b>AI videos (up to 15 seconds each)</b> plus AI images — refreshed monthly. Higher plans = more videos.</p></div>
     <div class="bill reveal">Monthly <div class="sw" id="bsw"><i></i></div> Yearly <span class="save">Save up to 30%</span></div>
     <div class="price-grid" id="priceGrid"></div>
   </section>
@@ -638,7 +638,7 @@ afterRender['/business']=function(){
 };
 
 pages['/pricing']=function(){
-  return '<div class="crumbs"><a data-go="/">Home</a> / Pricing</div><h1 style="text-align:center">Plans for every creator</h1><p class="lead" style="text-align:center;margin:0 auto 26px">Credits power every AI generation — roughly 4 credits per image and 6 per video. Pick a plan; credits refresh monthly.</p>'+
+  return '<div class="crumbs"><a data-go="/">Home</a> / Pricing</div><h1 style="text-align:center">Plans for every creator</h1><p class="lead" style="text-align:center;margin:0 auto 26px">Every plan includes a set number of AI videos (up to 15 seconds each) plus AI images, refreshed monthly. Pick the plan that fits how much you create.</p>'+
    '<div class="bill">Monthly <div class="sw" id="bsw2"><i></i></div> Yearly <span class="save">Save up to 30%</span></div>'+
    '<div class="price-grid" id="priceGrid2"></div>'+
    '<div class="sec-head" style="margin-top:60px"><h2>Frequently asked</h2></div><div class="faq" id="faq"></div>';
@@ -731,11 +731,11 @@ document.getElementById('sendBtn').addEventListener('click',function(){var p=doc
 
 /* pricing */
 var plans=[
- {n:'Starter',d:'For getting started with AI.',m:12.99,y:9.99,credits:'400 credits / month',f:['~100 AI images','~66 AI videos','All AI tools & 140+ models','HD · no watermark']},
- {n:'Pro',d:'For everyday creators.',m:24.99,y:19.99,credits:'900 credits / month',f:['~225 AI images','~150 AI videos','Talking characters & avatars','Commercial use'],hot:true},
- {n:'Ultra',d:'For power users & teams.',m:49.99,y:39.99,credits:'2,000 credits / month',f:['~500 AI images','~333 AI videos','Priority render queue','Team workspaces']},
- {n:'Max',d:'For studios & heavy usage.',m:99.99,y:79.99,credits:'5,000 credits / month',f:['~1,250 AI images','~833 AI videos','Highest priority + API access','Brand kits & bulk edit']},
- {n:'Lifetime',d:'Pay once. Create forever.',life:200,credits:'1,500 credits / month — for life',f:['~375 AI images every month','~250 AI videos every month','One-time payment · no subscription','All Pro features, forever'],best:true}
+ {n:'Starter',d:'For getting started with AI.',m:12.99,y:9.99,credits:'15 videos / month',f:['Videos up to 15 seconds each','+ ~100 AI images','All AI tools & 140+ models','HD · no watermark']},
+ {n:'Pro',d:'For everyday creators.',m:24.99,y:19.99,credits:'30 videos / month',f:['Videos up to 15 seconds each','+ ~250 AI images','Talking characters & avatars','Commercial use'],hot:true},
+ {n:'Ultra',d:'For power users & teams.',m:49.99,y:39.99,credits:'60 videos / month',f:['Videos up to 15 seconds each','+ ~500 AI images','Priority render queue','Team workspaces']},
+ {n:'Max',d:'For studios & heavy usage.',m:99.99,y:79.99,credits:'150 videos / month',f:['Videos up to 15 seconds each','+ ~1,250 AI images','Highest priority + API access','Brand kits & bulk edit']},
+ {n:'Lifetime',d:'Pay once. Create forever.',life:200,credits:'40 videos / month — for life',f:['Videos up to 15 seconds each','+ ~300 AI images monthly','One-time payment · no subscription','All Pro features, forever'],best:true}
 ];
 function renderPriceInto(id,yearly){document.getElementById(id).innerHTML=plans.map(function(p){
   var priceHtml;
