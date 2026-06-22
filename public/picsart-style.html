@@ -351,7 +351,7 @@ footer{background:var(--bg-2);padding:60px 0 34px;margin-top:70px;border-top:1px
   </div></section>
 
   <section class="sec wrap" id="pricing">
-    <div class="sec-head reveal"><span class="eyebrow">Pricing</span><h2>Plans for every creator</h2><p>Every plan gives you <b>monthly credits</b>. Videos cost credits by length — a 10s clip is 1 credit, a full minute is 5. Higher plans = more credits.</p></div>
+    <div class="sec-head reveal"><span class="eyebrow">Pricing</span><h2>Plans for every creator</h2><p>Every plan gives you <b>monthly credits</b>. Videos cost credits by length — a 10s clip is 100 credits, a full minute is 500. Higher plans = more credits.</p></div>
     <div class="bill reveal">Monthly <div class="sw" id="bsw"><i></i></div> Yearly <span class="save">Save up to 30%</span></div>
     <div class="price-grid" id="priceGrid"></div>
   </section>
@@ -640,8 +640,8 @@ afterRender['/business']=function(){
 pages['/pricing']=function(){
   return '<div class="crumbs"><a data-go="/">Home</a> / Pricing</div><h1 style="text-align:center">Plans for every creator</h1><p class="lead" style="text-align:center;margin:0 auto 22px">Every plan gives you <b>credits</b> each month. You spend credits when you make a video — longer videos cost more. Images are included. Pick the plan that fits how much you create.</p>'+
    '<div style="max-width:760px;margin:0 auto 26px;background:rgba(255,255,255,.04);border:1px solid var(--line,rgba(255,255,255,.08));border-radius:16px;padding:18px 20px"><div style="font-weight:800;font-size:14px;margin-bottom:12px;text-align:center">How credits work for video</div><div style="display:flex;flex-wrap:wrap;gap:9px;justify-content:center">'+
-     [['5s','1'],['10s','1'],['15s','2'],['20s','2'],['30s','3'],['45s','4'],['1 min','5']].map(function(c){return '<span style="font-size:13px;font-weight:600;background:rgba(139,92,246,.16);border:1px solid rgba(139,92,246,.4);border-radius:100px;padding:7px 13px">'+c[0]+' = '+c[1]+' credit'+(c[1]==='1'?'':'s')+'</span>';}).join('')+
-   '</div><div style="text-align:center;font-size:12.5px;color:#9a94b4;margin-top:12px">So with 15 credits you can make 15 short clips — or 3 full one-minute videos (5 credits each). Mix and match however you like.</div></div>'+
+     [['5s','100'],['10s','100'],['15s','200'],['20s','200'],['30s','300'],['45s','400'],['1 min','500']].map(function(c){return '<span style="font-size:13px;font-weight:600;background:rgba(139,92,246,.16);border:1px solid rgba(139,92,246,.4);border-radius:100px;padding:7px 13px">'+c[0]+' = '+c[1]+' credits</span>';}).join('')+
+   '</div><div style="text-align:center;font-size:12.5px;color:#9a94b4;margin-top:12px">So with 1,500 credits you can make 15 short clips — or 3 full one-minute videos (500 credits each). Mix and match however you like.</div></div>'+
    '<div class="bill">Monthly <div class="sw" id="bsw2"><i></i></div> Yearly <span class="save">Save up to 30%</span></div>'+
    '<div class="price-grid" id="priceGrid2"></div>'+
    '<div class="sec-head" style="margin-top:60px"><h2>Frequently asked</h2></div><div class="faq" id="faq"></div>';
@@ -649,7 +649,7 @@ pages['/pricing']=function(){
 afterRender['/pricing']=function(){
   renderPriceInto('priceGrid2',false);
   var y=false;document.getElementById('bsw2').addEventListener('click',function(){y=!y;this.classList.toggle('on',y);renderPriceInto('priceGrid2',y);});
-  var faqs=[['How do credits work?','Each plan gives you credits monthly. Making a video spends credits based on length: a 10-second video is 1 credit, 20s is 2, 30s is 3, and a full minute is 5. So 15 credits = fifteen 10s clips, or three 1-minute videos.'],['Can I cancel anytime?','Absolutely. Plans are monthly or yearly and you can cancel from your account at any time.'],['What can I make?','AI images, AI video (5s to 1 min), talking characters, avatars, plus full photo & video editing.'],['What about the Lifetime plan?','Lifetime is a one-time $200 payment with unlimited videos and images, forever — no monthly credit limit.']];
+  var faqs=[['How do credits work?','Each plan gives you credits monthly. Making a video spends credits based on length: a 10-second video is 100 credits, 20s is 200, 30s is 300, and a full minute is 500. So 1,500 credits = fifteen 10s clips, or three 1-minute videos.'],['Can I cancel anytime?','Absolutely. Plans are monthly or yearly and you can cancel from your account at any time.'],['What can I make?','AI images, AI video (5s to 1 min), talking characters, avatars, plus full photo & video editing.'],['What about the Lifetime plan?','Lifetime is a one-time $200 payment with unlimited videos and images, forever — no monthly credit limit.']];
   var f=document.getElementById('faq');f.innerHTML=faqs.map(function(q){return '<div class="q"><b>'+q[0]+'</b><p>'+q[1]+'</p></div>';}).join('');
   f.querySelectorAll('.q').forEach(function(q){q.addEventListener('click',function(){q.classList.toggle('open');});});
 };
@@ -734,10 +734,10 @@ document.getElementById('sendBtn').addEventListener('click',function(){var p=doc
 
 /* pricing */
 var plans=[
- {n:'Starter',d:'For getting started with AI.',m:12.99,y:9.99,credits:'15 credits / month',f:['≈ 15 short videos (10s = 1 credit)','Lengths from 5s up to 1 min','+ ~100 AI images','All AI tools & 140+ models']},
- {n:'Pro',d:'For everyday creators.',m:24.99,y:19.99,credits:'30 credits / month',f:['≈ 30 short videos (10s = 1 credit)','Lengths from 5s up to 1 min','+ ~250 AI images','Talking characters & avatars'],hot:true},
- {n:'Ultra',d:'For power users & teams.',m:49.99,y:39.99,credits:'60 credits / month',f:['≈ 60 short videos (10s = 1 credit)','Lengths from 5s up to 1 min','+ ~500 AI images','Priority render queue']},
- {n:'Max',d:'For studios & heavy usage.',m:99.99,y:79.99,credits:'150 credits / month',f:['≈ 150 short videos (10s = 1 credit)','Lengths from 5s up to 1 min','+ ~1,250 AI images','Highest priority + API access']},
+ {n:'Starter',d:'For getting started with AI.',m:12.99,y:9.99,credits:'1,500 credits / month',f:['≈ 15 short videos (10s = 100 credits)','Lengths from 5s up to 1 min','+ ~100 AI images','All AI tools & 140+ models']},
+ {n:'Pro',d:'For everyday creators.',m:24.99,y:19.99,credits:'3,000 credits / month',f:['≈ 30 short videos (10s = 100 credits)','Lengths from 5s up to 1 min','+ ~250 AI images','Talking characters & avatars'],hot:true},
+ {n:'Ultra',d:'For power users & teams.',m:49.99,y:39.99,credits:'6,000 credits / month',f:['≈ 60 short videos (10s = 100 credits)','Lengths from 5s up to 1 min','+ ~500 AI images','Priority render queue']},
+ {n:'Max',d:'For studios & heavy usage.',m:99.99,y:79.99,credits:'15,000 credits / month',f:['≈ 150 short videos (10s = 100 credits)','Lengths from 5s up to 1 min','+ ~1,250 AI images','Highest priority + API access']},
  {n:'Lifetime',d:'Pay once. Unlimited forever.',life:200,credits:'Unlimited credits',f:['Unlimited AI videos (any length)','Unlimited AI images','Every tool, model &amp; feature','One-time payment · no subscription, ever'],best:true}
 ];
 function renderPriceInto(id,yearly){document.getElementById(id).innerHTML=plans.map(function(p){
