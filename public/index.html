@@ -185,6 +185,7 @@ a{color:inherit;text-decoration:none}
       <a href="/picsart-style.html#/pricing">Pricing</a>
     </div>
     <div class="nav-right">
+      <span class="badge" id="creditBadge" title="Your video credits"><span style="color:var(--cyan);font-size:13px">◆</span> <b id="credits" style="color:#fff">15</b> credits</span>
       <span class="badge"><span class="dot"></span> Live · <span id="usage">0</span> made today</span>
       <button class="btn-up" onclick="location.href='/picsart-style.html#/pricing'">Upgrade ✦</button>
     </div>
@@ -226,14 +227,16 @@ a{color:inherit;text-decoration:none}
       </div>
 
       <div class="row2">
-        <div class="field" id="durField" style="display:none">
-          <label>Duration</label>
-          <div class="seg" id="dur"><button class="sel" data-v="5">5s</button><button data-v="10">10s</button></div>
-        </div>
         <div class="field" id="speedField">
           <label>Speed</label>
           <div class="seg" id="speed"><button class="sel" data-v="0">Quality</button><button data-v="1">Fast</button></div>
         </div>
+      </div>
+
+      <div class="field" id="durField" style="display:none">
+        <label>Video length</label>
+        <div class="seg" id="dur"><button class="sel" data-v="5">5s</button><button data-v="10">10s</button><button data-v="15">15s</button><button data-v="20">20s</button><button data-v="30">30s</button><button data-v="45">45s</button><button data-v="60">1 min</button></div>
+        <div id="durNote" style="font-size:12px;color:var(--ink-2);margin-top:9px;display:flex;align-items:center;gap:7px"><span style="display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:6px;background:rgba(139,92,246,.22);border:1px solid rgba(139,92,246,.5);font-weight:700;font-size:11px" id="durCost">1</span> <span id="durMsg">This 5s video uses 1 credit.</span></div>
       </div>
 
       <div class="field" id="voiceField" style="display:none">
@@ -322,12 +325,12 @@ document.querySelectorAll('#tabs .tab').forEach(function(t){t.addEventListener('
   $("#voiceField").style.display=v?"":"none";
   $("#speedField").style.display=v?"none":"";
   promptEl.placeholder=v?'Describe your video — e.g. "a strawberry and banana singing, pixar style"':'Describe your image — e.g. "a fox in a misty forest, golden light, photoreal"';
-  renderChips();
+  renderChips();if(v)updateDurUI();else updateGenBtn();
 });});
 
 /* segmented controls */
 document.querySelectorAll('.seg').forEach(function(seg){seg.querySelectorAll('button').forEach(function(b){b.addEventListener('click',function(){seg.querySelectorAll('button').forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');
-  var id=seg.id;if(id==='aspect')state.aspect=b.dataset.v;else if(id==='dur')state.duration=b.dataset.v;else if(id==='speed')state.fast=b.dataset.v;else if(id==='voiceon'){state.voiceon=b.dataset.v;$("#narration").style.display=b.dataset.v==='1'?'':'none';}
+  var id=seg.id;if(id==='aspect')state.aspect=b.dataset.v;else if(id==='dur'){state.duration=b.dataset.v;updateDurUI();}else if(id==='speed')state.fast=b.dataset.v;else if(id==='voiceon'){state.voiceon=b.dataset.v;$("#narration").style.display=b.dataset.v==='1'?'':'none';}
 });});});
 $("#voiceSelect").addEventListener('change',function(){state.voice=this.value;});
 promptEl.addEventListener('input',function(){promptEl.style.height='auto';promptEl.style.height=Math.min(promptEl.scrollHeight,170)+'px';});
@@ -337,6 +340,18 @@ function uKey(){return "vf_uses_"+new Date().toISOString().slice(0,10);}
 function getUses(){try{return parseInt(localStorage.getItem(uKey())||"0",10)||0;}catch(e){return 0;}}
 function bumpUses(){try{var n=getUses()+1;localStorage.setItem(uKey(),String(n));usageEl.textContent=n;}catch(e){}}
 usageEl.textContent=getUses();
+
+/* credits — longer videos cost more (10s=1, 1min=5), averaged */
+var CREDIT_COST={"5":1,"10":1,"15":2,"20":2,"30":3,"45":4,"60":5};
+function costFor(d){return CREDIT_COST[String(d)]||1;}
+function durLabel(d){return String(d)==="60"?"1-min":d+"s";}
+var creditsEl=$("#credits");
+function getCredits(){try{var v=localStorage.getItem("vf_credits");return v===null?15:(parseInt(v,10)||0);}catch(e){return 15;}}
+function setCredits(n){try{localStorage.setItem("vf_credits",String(n));}catch(e){}if(creditsEl)creditsEl.textContent=n;}
+function spendCredits(n){setCredits(Math.max(0,getCredits()-n));}
+setCredits(getCredits());
+function updateGenBtn(){if(busy)return;if(state.mode==="video"){var c=costFor(state.duration);goBtn.textContent="Generate ✦ · "+c+" credit"+(c===1?"":"s");}else{goBtn.textContent="Generate ✦";}}
+function updateDurUI(){var d=state.duration,c=costFor(d),dc=$("#durCost"),dm=$("#durMsg");if(dc)dc.textContent=c;if(dm)dm.textContent="This "+durLabel(d)+" video uses "+c+" credit"+(c===1?"":"s")+".";updateGenBtn();}
 
 /* loading UI */
 var STEP_DEFS=[["Understanding prompt","🧠"],["Generating frames","🎞️"],["Adding voiceover","🎙️"],["Finalizing","✨"]];
@@ -360,6 +375,8 @@ async function run(){
   var isVideo=state.mode==="video";
   var raw=promptEl.value.trim();
   if(raw.length<2&&!(isVideo&&state.style)){showToast("Please enter a prompt first.");promptEl.focus();return;}
+  var cost=isVideo?costFor(state.duration):0;
+  if(isVideo&&getCredits()<cost){showToast("Not enough credits — a "+durLabel(state.duration)+" video needs "+cost+". Upgrade for more.");setTimeout(function(){location.href='/picsart-style.html#/pricing';},1600);return;}
   var withVoice=isVideo&&state.voiceon==="1";
   busy=true;goBtn.disabled=true;goBtn.textContent="Generating…";
   showLoading(isVideo,withVoice);setStep(0);setProg(6,"Submitting…","Sending your prompt to the AI engine.");startTimer();
@@ -371,7 +388,7 @@ async function run(){
     var gj=await gr.json();
     if(!gr.ok)throw new Error(gj.error||("Request failed ("+gr.status+")"));
     if(!gj.status_url)throw new Error("No job was created. Check the server FAL_KEY.");
-    bumpUses();setStep(1);
+    bumpUses();if(isVideo&&cost>0){spendCredits(cost);showToast("Spent "+cost+" credit"+(cost===1?"":"s")+" · "+getCredits()+" left");}setStep(1);
     setProg(18,isVideo?"Rendering your video…":"Generating your image…",isVideo?"The AI is painting every frame. Hang tight — videos take ~30s–2 min.":"Almost there…");
     var start=Date.now(),maxMs=isVideo?240000:90000,pct=18,done=null;
     while(Date.now()-start<maxMs){
@@ -401,7 +418,7 @@ async function run(){
     showToast(media.kind==="video"?"Video ready ✦":"Image ready ✦");
   }catch(e){
     hideLoading();errBox.textContent=(e&&e.message)?e.message:String(e);errBox.classList.add("show");empty.style.display="";
-  }finally{busy=false;goBtn.disabled=false;goBtn.textContent="Generate ✦";}
+  }finally{busy=false;goBtn.disabled=false;updateGenBtn();}
 }
 goBtn.addEventListener('click',run);
 promptEl.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();run();}});
