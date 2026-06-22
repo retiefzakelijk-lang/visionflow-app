@@ -53,7 +53,10 @@ export default async function handler(req, res) {
     model = MODELS.video;
     input = { prompt: prompt.trim() };
     if (aspect_ratio && ["16:9", "9:16", "1:1"].includes(aspect_ratio)) input.aspect_ratio = aspect_ratio;
-    input.duration = String(duration) === "10" ? "10" : "5";
+    // The model renders up to ~10s per clip. Longer lengths chosen in the UI are
+    // billed by credits; we send the engine's max so the clip still renders.
+    const dnum = parseInt(duration, 10) || 5;
+    input.duration = dnum >= 10 ? "10" : "5";
   } else {
     model = fast ? MODELS.image_fast : MODELS.image;
     input = { prompt: prompt.trim(), image_size: imageSize(aspect_ratio), num_images: 1 };
