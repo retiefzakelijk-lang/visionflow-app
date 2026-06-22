@@ -348,8 +348,8 @@ footer{background:var(--bg-2);padding:60px 0 34px;margin-top:70px;border-top:1px
   </div></section>
 
   <section class="sec wrap" id="pricing">
-    <div class="sec-head reveal"><span class="eyebrow">Pricing</span><h2>Plans for every creator</h2><p>Start free. Upgrade for unlimited AI and team features.</p></div>
-    <div class="bill reveal">Monthly <div class="sw" id="bsw"><i></i></div> Yearly <span class="save">Save 35%</span></div>
+    <div class="sec-head reveal"><span class="eyebrow">Pricing</span><h2>Plans for every creator</h2><p>Credits power every AI generation — about <b>4 credits per image</b> and <b>6 per video</b>. Credits refresh monthly.</p></div>
+    <div class="bill reveal">Monthly <div class="sw" id="bsw"><i></i></div> Yearly <span class="save">Save up to 30%</span></div>
     <div class="price-grid" id="priceGrid"></div>
   </section>
 
@@ -635,8 +635,8 @@ afterRender['/business']=function(){
 };
 
 pages['/pricing']=function(){
-  return '<div class="crumbs"><a data-go="/">Home</a> / Pricing</div><h1 style="text-align:center">Plans for every creator</h1><p class="lead" style="text-align:center;margin:0 auto 26px">Start free. Upgrade for unlimited AI, premium content and team features.</p>'+
-   '<div class="bill">Monthly <div class="sw" id="bsw2"><i></i></div> Yearly <span class="save">Save 35%</span></div>'+
+  return '<div class="crumbs"><a data-go="/">Home</a> / Pricing</div><h1 style="text-align:center">Plans for every creator</h1><p class="lead" style="text-align:center;margin:0 auto 26px">Credits power every AI generation — roughly 4 credits per image and 6 per video. Pick a plan; credits refresh monthly.</p>'+
+   '<div class="bill">Monthly <div class="sw" id="bsw2"><i></i></div> Yearly <span class="save">Save up to 30%</span></div>'+
    '<div class="price-grid" id="priceGrid2"></div>'+
    '<div class="sec-head" style="margin-top:60px"><h2>Frequently asked</h2></div><div class="faq" id="faq"></div>';
 };
@@ -727,8 +727,22 @@ showRow(document.getElementById('show1'),0);showRow(document.getElementById('sho
 document.getElementById('sendBtn').addEventListener('click',function(){var p=document.getElementById('prompt').value.trim();navTo('/studio'+(p?'?prompt='+encodeURIComponent(p):''));});
 
 /* pricing */
-var plans=[{n:'Free',d:'For trying it out.',m:0,y:0,f:['Basic editor & tools','Limited AI generations','Free templates','Standard exports']},{n:'Plus',d:'For everyday creators.',m:8,y:5,f:['Everything in Free','Background remover','More AI generations','HD, no watermark']},{n:'Pro',d:'For serious creators.',m:14,y:9,f:['Everything in Plus','Unlimited AI image & video','Talking characters & avatars','Premium content'],hot:true},{n:'Team',d:'For brands & teams.',m:30,y:21,f:['Everything in Pro','Team workspaces','Brand kits & bulk edit','API & priority support']}];
-function renderPriceInto(id,yearly){document.getElementById(id).innerHTML=plans.map(function(p){var v=yearly?p.y:p.m;return '<div class="pcard'+(p.hot?' hot':'')+'"><div class="pn">'+p.n+'</div><div class="pd">'+p.d+'</div><div class="amt">$'+v+'<small>/mo</small></div><ul>'+p.f.map(function(x){return '<li><span class="ck">✓</span>'+x+'</li>';}).join('')+'</ul><button class="btn '+(p.hot?'btn-grad':'btn-out')+'" data-go="/signup">'+(p.n==='Free'?'Get started':'Choose '+p.n)+'</button></div>';}).join('');}
+var plans=[
+ {n:'Free',d:'For trying out AI creation.',m:0,y:0,credits:'25 credits / month',f:['~6 image generations','~4 short AI videos','Basic editor & templates','Standard queue · watermark']},
+ {n:'Pro',d:'AI tools for everyday creative work.',m:15,y:10.5,credits:'500 credits / month',f:['~125 Nano Banana Pro generations','~83 Kling 3.0 videos','All AI tools & 140+ models','HD · no watermark · commercial use'],hot:true},
+ {n:'Ultra',d:'Heavy AI usage for creators & teams.',m:75,y:52.5,seat:true,credits:'2,500 credits / month',f:['~625 Nano Banana Pro generations','~416 Kling 3.0 videos','Everything in Pro','Team workspaces · per seat']},
+ {n:'Enterprise',d:'Custom AI for large organizations.',m:-1,y:-1,credits:'Custom credit volume',f:['Volume discounts on credit rate','On-demand top-ups','Flexible billing terms','SSO, SLA & dedicated support']}
+];
+function renderPriceInto(id,yearly){document.getElementById(id).innerHTML=plans.map(function(p){
+  var priceHtml;
+  if(p.m<0){priceHtml='<div class="amt">Custom</div>';}
+  else{var v=yearly?p.y:p.m;var was=(yearly&&p.m>0)?'<span style="text-decoration:line-through;color:var(--ink-3);font-size:18px;margin-right:8px">$'+p.m+'</span>':'';priceHtml='<div class="amt">'+was+'$'+v+'<small>/mo'+(p.seat?' · seat':'')+'</small></div>'+(yearly&&p.m>0?'<div style="font-size:12px;color:var(--ink-3);margin-top:2px">billed yearly</div>':'');}
+  return '<div class="pcard'+(p.hot?' hot':'')+'"><div class="pn">'+p.n+'</div><div class="pd">'+p.d+'</div>'+
+    '<div style="display:flex;align-items:center;gap:7px;font-weight:700;font-size:14px;margin-bottom:14px"><span style="color:var(--pink)">✦</span>'+p.credits+'</div>'+
+    priceHtml+
+    '<ul>'+p.f.map(function(x){return '<li><span class="ck">✓</span>'+x+'</li>';}).join('')+'</ul>'+
+    '<button class="btn '+(p.hot?'btn-grad':'btn-out')+'" data-go="'+(p.m<0?'/business':'/signup')+'">'+(p.n==='Free'?'Get started':(p.m<0?'Contact sales':'Choose '+p.n))+'</button></div>';
+}).join('');}
 renderPriceInto('priceGrid',false);
 document.getElementById('bsw').addEventListener('click',function(){this.classList.toggle('on');renderPriceInto('priceGrid',this.classList.contains('on'));});
 
