@@ -544,7 +544,7 @@ afterRender['/studio']=function(q){
   document.querySelectorAll('#sMode button,#sStyle button,#sAspect button,#sDur button').forEach(function(b){b.addEventListener('click',function(){var sib=b.parentNode.querySelectorAll('button');sib.forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');if(b.parentNode.id==='sMode')syncDurVis();if(b.parentNode.id==='sDur')updDurNote();});});
   syncDurVis();updDurNote();
   function stylePrefix(style,p){var s=(style||'').toLowerCase();
-    if(s.indexOf('talk')>=0||s.indexOf('fruit')>=0)return 'cute 3D '+p+', big expressive eyes and a mouth that opens and closes as if singing, glossy pixar-style render, colorful soft lighting, playful, high detail';
+    if(s.indexOf('talk')>=0||s.indexOf('fruit')>=0)return '3D Pixar-style animated cinematic scene of '+p+', humanoid fruit characters with realistic human bodies and expressive fruit heads, talking and emoting to camera, mouths moving, detailed realistic modern kitchen interior, soft cinematic lighting, photorealistic 3D render, high detail, 4k';
     if(s.indexOf('sport')>=0)return 'cinematic slow-motion sports footage of '+p+', dynamic camera, stadium lighting, motion blur, 4k, dramatic';
     if(s.indexOf('dance')>=0)return p+', dancing energetically to music, dynamic motion, vibrant stage lighting, cinematic';
     if(s.indexOf('anime')>=0)return 'anime style scene of '+p+', vibrant colors, detailed background, cinematic anime motion';

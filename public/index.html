@@ -301,7 +301,7 @@ $("#voiceSelect").innerHTML=VOICES.map(function(v){return '<option value="'+v[0]
 /* styles */
 var STYLES=[["","None","✦"],["talkingfruit","Talking Fruit","🍓"],["talkinganimal","Talking Animal","🐱"],["sports","Sports","⚽"],["cinematic","Cinematic","🎬"],["anime","Anime","🌀"],["realistic","Realistic","📷"],["3d","3D Character","🧊"]];
 var STYLE_PREFIX={
-  talkingfruit:"cute 3D {P}, big expressive eyes and a mouth that opens and closes as if singing, glossy pixar-style render, on a kitchen counter, colorful soft lighting, playful, high detail",
+  talkingfruit:"3D Pixar-style animated cinematic scene of {P}, humanoid fruit characters with realistic human bodies and expressive fruit heads, talking and emoting to camera, mouths moving, detailed realistic modern kitchen interior, soft cinematic lighting, photorealistic 3D render, high detail, 4k",
   talkinganimal:"an adorable {P} talking and singing to camera, expressive moving mouth, big eyes, pixar-style 3D, soft lighting, cute and funny",
   sports:"cinematic slow-motion sports footage of {P}, dynamic camera, stadium lighting, motion blur, 4k, dramatic",
   cinematic:"cinematic film shot of {P}, shallow depth of field, dramatic lighting, slow camera push-in, anamorphic, film look",
@@ -309,12 +309,12 @@ var STYLE_PREFIX={
   realistic:"photorealistic video of {P}, natural lighting, lifelike motion, 4k",
   "3d":"cute 3D cartoon animation of {P}, pixar style, soft global illumination, smooth motion"
 };
-function applyStyle(p){var pre=STYLE_PREFIX[state.style];if(!pre)return p;var subj=p&&p.length>1?p:"a strawberry and a banana character";return pre.replace("{P}",subj);}
+function applyStyle(p){var pre=STYLE_PREFIX[state.style];if(!pre)return p;var subj=p&&p.length>1?p:(state.style==="talkingfruit"?"a muscular banana man and a glamorous strawberry woman in a kitchen":"a strawberry and a banana character");return pre.replace("{P}",subj);}
 function renderStyles(){$("#styles").innerHTML=STYLES.map(function(s){return '<div class="style'+(s[0]===state.style?' sel':'')+'" data-s="'+s[0]+'"><span class="em">'+s[2]+'</span><span class="nm">'+s[1]+'</span></div>';}).join('');
   document.querySelectorAll('#styles .style').forEach(function(el){el.addEventListener('click',function(){state.style=el.dataset.s;renderStyles();});});}
 
 /* example chips */
-var EX={image:['a fox in a misty forest, golden light, photoreal','a 3D cute robot, studio lighting','cyberpunk city street at night','watercolor mountain landscape'],video:['a strawberry and banana singing on a counter','slow-motion soccer goal celebration','a cat dancing, pixar style','neon city drive, cinematic']};
+var EX={image:['a fox in a misty forest, golden light, photoreal','a 3D cute robot, studio lighting','cyberpunk city street at night','watercolor mountain landscape'],video:['a muscular banana man and a strawberry woman arguing in a kitchen','slow-motion soccer goal celebration','a cat dancing, pixar style','neon city drive, cinematic']};
 function renderChips(){$("#chips").innerHTML=EX[state.mode].map(function(e){return '<span class="chip">'+e+'</span>';}).join('');
   document.querySelectorAll('#chips .chip').forEach(function(c){c.addEventListener('click',function(){promptEl.value=c.textContent;});});}
 
