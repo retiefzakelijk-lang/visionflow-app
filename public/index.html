@@ -311,7 +311,9 @@ var STYLE_PREFIX={
 };
 function applyStyle(p){var pre=STYLE_PREFIX[state.style];if(!pre)return p;var subj=p&&p.length>1?p:(state.style==="talkingfruit"?"a muscular banana man and a glamorous strawberry woman in a kitchen":"a strawberry and a banana character");return pre.replace("{P}",subj);}
 function renderStyles(){$("#styles").innerHTML=STYLES.map(function(s){return '<div class="style'+(s[0]===state.style?' sel':'')+'" data-s="'+s[0]+'"><span class="em">'+s[2]+'</span><span class="nm">'+s[1]+'</span></div>';}).join('');
-  document.querySelectorAll('#styles .style').forEach(function(el){el.addEventListener('click',function(){state.style=el.dataset.s;renderStyles();});});}
+  document.querySelectorAll('#styles .style').forEach(function(el){el.addEventListener('click',function(){state.style=el.dataset.s;renderStyles();
+    if(state.style==='talkingfruit'||state.style==='talkinganimal'){state.voiceon='1';var seg=document.getElementById('voiceon');if(seg)seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('sel',x.dataset.v==='1');});var nar=$("#narration");if(nar)nar.style.display='';showToast('Voiceover turned on so your characters talk 🎙️');}
+  });});}
 
 /* example chips */
 var EX={image:['a fox in a misty forest, golden light, photoreal','a 3D cute robot, studio lighting','cyberpunk city street at night','watercolor mountain landscape'],video:['a muscular banana man and a strawberry woman arguing in a kitchen','slow-motion soccer goal celebration','a cat dancing, pixar style','neon city drive, cinematic']};
@@ -442,11 +444,12 @@ function renderResult(media,prompt,audioUrl){
   var vbtn=audioUrl?'<button class="bsoft" id="dlA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg>Voiceover</button>':"";
   var musicBtn=isVid?'<button class="bsoft" id="addMusic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>Add music</button>':"";
   result.innerHTML='<div class="media-wrap">'+node+'</div>'+audio+
-    '<audio id="bgm" loop></audio><input id="musicFile" type="file" accept="audio/*" style="display:none">'+
+    '<audio id="bgm" loop controls style="width:100%;margin-top:12px;display:none"></audio><input id="musicFile" type="file" accept="audio/*" style="display:none">'+
     '<div class="actions"><button class="bsoft primary" id="dlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg>Download '+(isVid?"video":"image")+'</button>'+musicBtn+vbtn+
     '<button class="bsoft" id="again">↻ Generate again</button>'+
     '<a class="bsoft" href="'+media.url+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M21 3l-9 9"/></svg>Open</a></div>'+
     '<div id="musicRow" style="display:none;margin-top:11px;font-size:13px;color:var(--ink-2);display:none;align-items:center;gap:10px;flex-wrap:wrap"></div>'+
+    (isVid&&!audioUrl?'<div style="font-size:12px;color:var(--ink-2);margin-top:10px">🔊 The raw AI clip has no built-in sound — tap <b>Add music</b> for a song, or turn on <b>Voiceover</b> before generating so your characters talk.</div>':'')+
     '<div class="meta">"'+esc(prompt)+'"'+(audioUrl?' · Voice: '+esc(state.voice):'')+'</div>';
   result.classList.add("show");
   $("#dlBtn").addEventListener("click",function(){downloadRemote(media.url,name);});
@@ -459,7 +462,7 @@ function renderResult(media,prompt,audioUrl){
     if(addBtn){addBtn.addEventListener("click",function(){mf.click();});}
     if(mf){mf.addEventListener("change",function(){
       if(!mf.files||!mf.files[0])return;var f=mf.files[0];
-      bgm.src=URL.createObjectURL(f);bgm.loop=true;
+      bgm.src=URL.createObjectURL(f);bgm.loop=true;bgm.volume=1;bgm.style.display="block";
       if(rv){rv.muted=true;try{rv.currentTime=0;rv.play();}catch(e){}
         bgm.currentTime=0;bgm.play().catch(function(){});
         rv.onplay=function(){bgm.play().catch(function(){});};
