@@ -543,24 +543,64 @@ afterRender['/studio']=function(q){
   function syncDurVis(){var mb=document.querySelector('#sMode button.sel'),isV=mb&&mb.dataset.m==='video',f=document.getElementById('sDurField');if(f)f.style.display=isV?'':'none';}
   document.querySelectorAll('#sMode button,#sStyle button,#sAspect button,#sDur button').forEach(function(b){b.addEventListener('click',function(){var sib=b.parentNode.querySelectorAll('button');sib.forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');if(b.parentNode.id==='sMode')syncDurVis();if(b.parentNode.id==='sDur')updDurNote();});});
   syncDurVis();updDurNote();
+  function stylePrefix(style,p){var s=(style||'').toLowerCase();
+    if(s.indexOf('talk')>=0||s.indexOf('fruit')>=0)return 'cute 3D '+p+', big expressive eyes and a mouth that opens and closes as if singing, glossy pixar-style render, colorful soft lighting, playful, high detail';
+    if(s.indexOf('sport')>=0)return 'cinematic slow-motion sports footage of '+p+', dynamic camera, stadium lighting, motion blur, 4k, dramatic';
+    if(s.indexOf('dance')>=0)return p+', dancing energetically to music, dynamic motion, vibrant stage lighting, cinematic';
+    if(s.indexOf('anime')>=0)return 'anime style scene of '+p+', vibrant colors, detailed background, cinematic anime motion';
+    if(s.indexOf('cinema')>=0)return 'cinematic film shot of '+p+', shallow depth of field, dramatic lighting, anamorphic, film look';
+    return p;}
+  function pExtract(r){if(!r)return null;if(r.video&&r.video.url)return{url:r.video.url,kind:'video'};if(r.images&&r.images[0]&&r.images[0].url)return{url:r.images[0].url,kind:'image'};if(r.image&&r.image.url)return{url:r.image.url,kind:'image'};return null;}
+  function pSleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
   var busy=false;
-  document.getElementById('sGen').addEventListener('click',function(){
-    if(busy)return;busy=true;var btn=this;btn.textContent='Generating…';
+  document.getElementById('sGen').addEventListener('click',async function(){
+    if(busy)return;
+    var btn=this;
     var modeBtn=document.querySelector('#sMode button.sel');var isV=modeBtn&&modeBtn.dataset.m==='video';
     var styleBtn=document.querySelector('#sStyle button.sel');var style=styleBtn?styleBtn.textContent:'';
-    var prompt=document.getElementById('sPrompt').value.trim()||t[1];
-    var kw=(PRESET_PROMPTS[style]?style:'')+' '+prompt;var themeKw=t[2];
-    var stage=document.getElementById('sStage');stage.innerHTML='<div class="sgrid" id="sg"></div>';
-    var g=document.getElementById('sg');
-    for(var i=0;i<4;i++){(function(i){
-      var c=document.createElement('div');c.className='scell';c.innerHTML='<div class="ph"></div>';g.appendChild(c);
-      var im=document.createElement('img');im.className='m';im.referrerPolicy='no-referrer';im.src=themeImg(themeKw,Date.now()%9999+i);im.onerror=function(){im.remove();};
-      c.appendChild(im);
-      if(isV){var v=vidEl(i);c.appendChild(v);}
-      var a=document.createElement('a');a.className='dl';a.href=im.src;a.download='picsift-'+i+'.jpg';a.target='_blank';a.innerHTML='⬇';c.appendChild(a);
-      setTimeout(function(){c.classList.add('done');},700+i*350);
-    })(i);}
-    setTimeout(function(){busy=false;btn.textContent='Generate ✦';showToast('Generated 4 results ✦');},700+4*350+300);
+    var aspBtn=document.querySelector('#sAspect button.sel');var aspect=aspBtn?aspBtn.textContent:'1:1';
+    var prompt=document.getElementById('sPrompt').value.trim();
+    if(prompt.length<2){showToast('Please enter a prompt first.');return;}
+    var dur=isV?selDur():0;
+    var finalPrompt=isV?stylePrefix(style,prompt):prompt;
+    busy=true;btn.textContent='Generating…';
+    var stage=document.getElementById('sStage');
+    stage.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:40px;min-height:300px">'+
+      '<div class="pspin" style="width:74px;height:74px;border-radius:50%;background:conic-gradient(from 0deg,#8b5cf6,#ec4899,#22d3ee,#8b5cf6);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 0);mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 0);animation:pspin 1s linear infinite"></div>'+
+      '<div id="pStat" style="font-weight:800;font-size:17px">Submitting…</div>'+
+      '<div id="pSub" style="font-size:13px;color:var(--ink-3);max-width:38ch">'+(isV?'Video takes ~1–3 minutes — the AI renders every frame. Keep this tab open.':'Generating your image…')+'</div>'+
+      '<div style="width:min(360px,80%);height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden"><i id="pBar" style="display:block;height:100%;width:6%;border-radius:6px;background:linear-gradient(90deg,#a78bfa,#22d3ee);transition:width .4s ease"></i></div></div>';
+    if(!document.getElementById('pspinKF')){var st=document.createElement('style');st.id='pspinKF';st.textContent='@keyframes pspin{to{transform:rotate(360deg)}}';document.head.appendChild(st);}
+    function setP(p,stat,sub){var b=document.getElementById('pBar');if(b)b.style.width=p+'%';if(stat){var e=document.getElementById('pStat');if(e)e.textContent=stat;}if(sub){var s=document.getElementById('pSub');if(s)s.textContent=sub;}}
+    try{
+      var payload={mode:isV?'video':'image',prompt:finalPrompt,aspect_ratio:aspect};
+      if(isV)payload.duration=String(dur);else payload.fast=false;
+      var gr=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      var gj=await gr.json();
+      if(!gr.ok||!gj.status_url)throw new Error(gj.error||'Could not start generation.');
+      setP(18,isV?'Rendering your video…':'Generating your image…');
+      var start=Date.now(),maxMs=isV?420000:90000,pct=18,done=null,fails=0;
+      while(Date.now()-start<maxMs){
+        await pSleep(2500);
+        pct=Math.min(pct+(isV?1.4:11),isV?96:92);setP(pct);
+        if(isV&&pct>=70&&pct<90)setP(pct,null,'Almost there — putting the final frames together…');
+        var pj=null;
+        try{var pr=await fetch('/api/poll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status_url:gj.status_url,response_url:gj.response_url})});pj=await pr.json();if(!pr.ok){pj=null;fails++;}else fails=0;}catch(e){fails++;}
+        if(!pj){if(fails>16)throw new Error('Lost the connection while rendering. Please try again.');continue;}
+        if(pj.status==='COMPLETED'){done=pj.result;break;}
+        if(pj.status==='ERROR'||pj.status==='FAILED')throw new Error('Generation failed on the provider side.');
+      }
+      if(!done)throw new Error('Timed out. Please try again or pick a shorter length.');
+      var media=pExtract(done);if(!media)throw new Error('Finished, but no media came back.');
+      setP(100,'Done!','');
+      var nm='picsift-'+(prompt.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,32)||'result')+(media.kind==='video'?'.mp4':'.png');
+      var node=media.kind==='video'?'<video src="'+media.url+'" autoplay loop muted playsinline controls style="width:100%;max-height:520px;border-radius:14px;background:#000;display:block"></video>':'<img src="'+media.url+'" style="width:100%;max-height:520px;object-fit:contain;border-radius:14px;display:block">';
+      stage.innerHTML='<div style="padding:14px">'+node+'<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><a class="btn btn-grad" href="'+media.url+'" download="'+nm+'" target="_blank" rel="noopener">⬇ Download '+(media.kind==='video'?'video':'image')+'</a><a class="btn" href="'+media.url+'" target="_blank" rel="noopener">Open</a></div><div style="font-size:12px;color:var(--ink-3);margin-top:10px">"'+prompt+'"</div></div>';
+      showToast(media.kind==='video'?'Video ready ✦':'Image ready ✦');
+    }catch(err){
+      stage.innerHTML='<div class="stage-empty"><div class="bigi">⚠️</div><span>'+(err&&err.message?err.message:'Something went wrong.')+'</span></div>';
+      showToast('Generation failed — try again.');
+    }finally{busy=false;btn.textContent='Generate ✦';}
   });
 };
 
