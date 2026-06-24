@@ -594,8 +594,27 @@ afterRender['/studio']=function(q){
       var media=pExtract(done);if(!media)throw new Error('Finished, but no media came back.');
       setP(100,'Done!','');
       var nm='picsift-'+(prompt.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,32)||'result')+(media.kind==='video'?'.mp4':'.png');
-      var node=media.kind==='video'?'<video src="'+media.url+'" autoplay loop muted playsinline controls style="width:100%;max-height:520px;border-radius:14px;background:#000;display:block"></video>':'<img src="'+media.url+'" style="width:100%;max-height:520px;object-fit:contain;border-radius:14px;display:block">';
-      stage.innerHTML='<div style="padding:14px">'+node+'<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><a class="btn btn-grad" href="'+media.url+'" download="'+nm+'" target="_blank" rel="noopener">⬇ Download '+(media.kind==='video'?'video':'image')+'</a><a class="btn" href="'+media.url+'" target="_blank" rel="noopener">Open</a></div><div style="font-size:12px;color:var(--ink-3);margin-top:10px">"'+prompt+'"</div></div>';
+      if(media.kind==='video'){
+        stage.innerHTML='<div style="padding:14px">'+
+          '<div style="position:relative;border-radius:14px;overflow:hidden;background:#000">'+
+            '<video id="pRV" src="'+media.url+'" preload="auto" autoplay loop muted playsinline controls style="width:100%;max-height:520px;display:block"></video>'+
+            '<div id="pVload" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.6);color:#fff;font-size:13px;font-weight:700"><div style="width:48px;height:48px;border-radius:50%;background:conic-gradient(from 0deg,#8b5cf6,#ec4899,#22d3ee,#8b5cf6);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 0);mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 0);animation:pspin 1s linear infinite"></div>Loading video…</div>'+
+          '</div>'+
+          '<audio id="pBgm" loop></audio><input id="pMusicFile" type="file" accept="audio/*" style="display:none">'+
+          '<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">'+
+            '<a class="btn btn-grad" href="'+media.url+'" download="'+nm+'" target="_blank" rel="noopener">⬇ Download video</a>'+
+            '<button class="btn" id="pAddMusic">🎵 Add music</button>'+
+            '<a class="btn" href="'+media.url+'" target="_blank" rel="noopener">Open</a></div>'+
+          '<div id="pMusicRow" style="display:none;margin-top:10px;font-size:13px;color:var(--ink-2)"></div>'+
+          '<div style="font-size:12px;color:var(--ink-3);margin-top:10px">"'+prompt+'"</div></div>';
+        var rv=document.getElementById('pRV'),vl=document.getElementById('pVload');
+        var hide=function(){if(vl)vl.style.display='none';};['loadeddata','canplay','playing'].forEach(function(e){if(rv)rv.addEventListener(e,hide);});setTimeout(hide,9000);
+        var mf=document.getElementById('pMusicFile'),bgm=document.getElementById('pBgm'),ab=document.getElementById('pAddMusic'),mr=document.getElementById('pMusicRow');
+        if(ab)ab.addEventListener('click',function(){mf.click();});
+        if(mf)mf.addEventListener('change',function(){if(!mf.files||!mf.files[0])return;var f=mf.files[0];bgm.src=URL.createObjectURL(f);bgm.loop=true;if(rv){rv.muted=true;try{rv.currentTime=0;rv.play();}catch(e){}bgm.currentTime=0;bgm.play().catch(function(){});rv.onplay=function(){bgm.play().catch(function(){});};rv.onpause=function(){bgm.pause();};rv.onseeked=function(){try{bgm.currentTime=rv.currentTime;}catch(e){}};}mr.style.display='block';mr.innerHTML='🎵 <b style="color:#fff">'+f.name+'</b> playing over your video &nbsp;<button class="btn" id="pMusicOff" style="padding:5px 11px;font-size:12px">Remove</button>';var off=document.getElementById('pMusicOff');if(off)off.addEventListener('click',function(){bgm.pause();bgm.removeAttribute('src');mr.style.display='none';showToast('Music removed');});showToast('Music added 🎵 — it plays over your video');});
+      }else{
+        stage.innerHTML='<div style="padding:14px"><img src="'+media.url+'" style="width:100%;max-height:520px;object-fit:contain;border-radius:14px;display:block"><div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><a class="btn btn-grad" href="'+media.url+'" download="'+nm+'" target="_blank" rel="noopener">⬇ Download image</a><a class="btn" href="'+media.url+'" target="_blank" rel="noopener">Open</a></div><div style="font-size:12px;color:var(--ink-3);margin-top:10px">"'+prompt+'"</div></div>';
+      }
       showToast(media.kind==='video'?'Video ready ✦':'Image ready ✦');
     }catch(err){
       stage.innerHTML='<div class="stage-empty"><div class="bigi">⚠️</div><span>'+(err&&err.message?err.message:'Something went wrong.')+'</span></div>';
