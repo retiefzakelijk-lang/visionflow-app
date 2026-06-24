@@ -243,7 +243,7 @@ a{color:inherit;text-decoration:none}
 
       <div class="field" id="durField" style="display:none">
         <label>Video length</label>
-        <div class="seg" id="dur"><button class="sel" data-v="5">5s</button><button data-v="10">10s</button><button data-v="15">15s</button><button data-v="20">20s</button><button data-v="30">30s</button><button data-v="45">45s</button><button data-v="60">1 min</button></div>
+        <div class="seg" id="dur"><button class="sel" data-v="5">5s</button><button data-v="10">10s</button><button data-v="15">15s</button><button data-v="20">20s</button><button data-v="25">25s</button><button data-v="30">30s</button><button data-v="35">35s</button><button data-v="40">40s</button><button data-v="45">45s</button><button data-v="50">50s</button><button data-v="55">55s</button><button data-v="60">1 min</button></div>
         <div id="durNote" style="font-size:12px;color:var(--ink-2);margin-top:9px;display:flex;align-items:center;gap:7px"><span style="display:inline-grid;place-items:center;min-width:34px;height:20px;padding:0 6px;border-radius:6px;background:rgba(139,92,246,.22);border:1px solid rgba(139,92,246,.5);font-weight:700;font-size:11px" id="durCost">100</span> <span id="durMsg">This 5s video uses 1 credit.</span></div>
       </div>
 
@@ -353,7 +353,7 @@ function bumpUses(){try{var n=getUses()+1;localStorage.setItem(uKey(),String(n))
 usageEl.textContent=getUses();
 
 /* credits — longer videos cost more (10s=1, 1min=5), averaged */
-var CREDIT_COST={"5":100,"10":100,"15":200,"20":200,"30":300,"45":400,"60":500};
+var CREDIT_COST={"5":100,"10":100,"15":200,"20":200,"25":250,"30":300,"35":350,"40":400,"45":400,"50":450,"55":500,"60":500};
 function costFor(d){return CREDIT_COST[String(d)]||1;}
 function durLabel(d){return String(d)==="60"?"1-min":d+"s";}
 var creditsEl=$("#credits");
