@@ -3,9 +3,10 @@
 // The secret FAL_KEY lives ONLY here on the server, never in the browser.
 
 const MODELS = {
-  video:      process.env.FAL_VIDEO_MODEL || "fal-ai/kling-video/v2.5-turbo/pro/text-to-video",
-  image:      process.env.FAL_IMAGE_MODEL || "fal-ai/flux/dev",
-  image_fast: process.env.FAL_IMAGE_FAST_MODEL || "fal-ai/flux/schnell",
+  video:       process.env.FAL_VIDEO_MODEL || "fal-ai/kling-video/v2.5-turbo/pro/text-to-video",
+  video_audio: process.env.FAL_VIDEO_AUDIO_MODEL || "fal-ai/veo3/fast",
+  image:       process.env.FAL_IMAGE_MODEL || "fal-ai/flux/dev",
+  image_fast:  process.env.FAL_IMAGE_FAST_MODEL || "fal-ai/flux/schnell",
 };
 
 const HITS = new Map();
@@ -42,7 +43,7 @@ export default async function handler(req, res) {
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "anon";
   if (rateLimited(ip)) { res.status(429).json({ error: "Too many requests — slow down a moment." }); return; }
 
-  const { mode, prompt, aspect_ratio, duration, fast } = body;
+  const { mode, prompt, aspect_ratio, duration, fast, audio } = body;
   if (!prompt || typeof prompt !== "string" || prompt.trim().length < 2 || prompt.length > 1500) {
     res.status(400).json({ error: "Please provide a prompt (2-1500 characters)." });
     return;
@@ -50,13 +51,21 @@ export default async function handler(req, res) {
 
   let model, input;
   if (mode === "video") {
-    model = MODELS.video;
-    input = { prompt: prompt.trim() };
-    if (aspect_ratio && ["16:9", "9:16", "1:1"].includes(aspect_ratio)) input.aspect_ratio = aspect_ratio;
-    // The model renders up to ~10s per clip. Longer lengths chosen in the UI are
-    // billed by credits; we send the engine's max so the clip still renders.
-    const dnum = parseInt(duration, 10) || 5;
-    input.duration = dnum >= 10 ? "10" : "5";
+    const useAudio = audio === true || audio === "true";
+    if (useAudio) {
+      // Audio-capable model (Veo) — generates the clip WITH built-in sound/voices.
+      model = MODELS.video_audio;
+      input = { prompt: prompt.trim(), generate_audio: true };
+      if (aspect_ratio && ["16:9", "9:16"].includes(aspect_ratio)) input.aspect_ratio = aspect_ratio;
+    } else {
+      model = MODELS.video;
+      input = { prompt: prompt.trim() };
+      if (aspect_ratio && ["16:9", "9:16", "1:1"].includes(aspect_ratio)) input.aspect_ratio = aspect_ratio;
+      // The silent model renders up to ~10s per clip. Longer UI lengths are made
+      // by generating several clips (the browser stitches them).
+      const dnum = parseInt(duration, 10) || 5;
+      input.duration = dnum >= 10 ? "10" : "5";
+    }
   } else {
     model = fast ? MODELS.image_fast : MODELS.image;
     input = { prompt: prompt.trim(), image_size: imageSize(aspect_ratio), num_images: 1 };
