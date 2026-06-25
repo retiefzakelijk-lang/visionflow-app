@@ -388,11 +388,11 @@ function durLabel(d){return String(d)==="60"?"1-min":d+"s";}
 var creditsEl=$("#credits");
 function curUser(){try{return JSON.parse(localStorage.getItem("vf_user")||"null");}catch(e){return null;}}
 function isLoggedIn(){return !!curUser();}
-function getCredits(){if(isLoggedIn())return Infinity;try{var v=localStorage.getItem("vf_credits2");return v===null?1500:(parseInt(v,10)||0);}catch(e){return 1500;}}
-function setCredits(n){try{if(!isLoggedIn())localStorage.setItem("vf_credits2",String(n));}catch(e){}if(creditsEl)creditsEl.textContent=isLoggedIn()?"Unlimited":Number(n).toLocaleString();}
-function spendCredits(n){if(isLoggedIn())return;setCredits(Math.max(0,getCredits()-n));}
-function charge(cost){if(isLoggedIn()){showToast("Unlimited plan ✦ — no credits used");return;}spendCredits(cost);showToast("Spent "+cost+" credit"+(cost===1?"":"s")+" · "+getCredits()+" left");}
-setCredits(getCredits());
+function getCredits(){return Infinity;}
+function setCredits(n){if(creditsEl)creditsEl.textContent="Unlimited";}
+function spendCredits(n){}
+function charge(cost){/* unlimited in this build — generating never costs or blocks */}
+setCredits(0);
 
 /* auth / login */
 function renderAuth(){
@@ -448,7 +448,7 @@ async function run(){
   var durN=parseInt(state.duration,10)||5;
   var nClips=(isVideo&&!useAudio&&durN>10)?Math.min(6,Math.ceil(durN/10)):1;
   var cost=isVideo?(useAudio?500:costFor(state.duration)):0;
-  if(isVideo&&getCredits()<cost){showToast("Not enough credits — this needs "+cost+". Upgrade for more.");setTimeout(function(){location.href='/picsart-style.html#/pricing';},1600);return;}
+  /* credits never block generation in this build */
   var withVoice=isVideo&&!useAudio&&state.voiceon==="1";
   busy=true;goBtn.disabled=true;goBtn.textContent="Generating…";
   showLoading(isVideo,withVoice);setStep(0);setProg(6,"Submitting…","Sending your prompt to the AI engine.");startTimer();
