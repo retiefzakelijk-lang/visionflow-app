@@ -171,6 +171,22 @@ a{color:inherit;text-decoration:none}
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(120px);background:#fff;color:#06060c;padding:14px 24px;border-radius:14px;font-size:14px;font-weight:700;z-index:200;transition:transform .4s var(--ease);box-shadow:var(--shadow)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 ::selection{background:rgba(139,92,246,.4);color:#fff}
+.modal-bg{position:fixed;inset:0;background:rgba(3,3,8,.72);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:#13111d;border:1px solid var(--line);border-radius:24px;padding:32px 30px;max-width:392px;width:100%;text-align:center;box-shadow:var(--shadow);position:relative}
+.modal h3{font-size:22px;margin-bottom:7px}
+.modal p{color:var(--ink-2);font-size:14px;margin-bottom:22px}
+.modal .x{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--ink-3);font-size:24px;line-height:1;cursor:pointer}
+.gmail{width:100%;background:rgba(0,0,0,.34);border:1px solid var(--line);border-radius:12px;padding:13px 15px;color:#fff;font-family:inherit;font-size:15px;outline:none;margin-bottom:11px;text-align:center}
+.gmail:focus{border-color:var(--violet)}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;background:#fff;color:#1f1f1f;font-weight:700;font-size:15px;border:none;border-radius:12px;padding:13px;cursor:pointer;font-family:inherit;transition:.18s}
+.gbtn:hover{transform:translateY(-1px);box-shadow:0 12px 26px -8px rgba(0,0,0,.55)}
+.userchip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:100px;padding:5px 7px 5px 13px}
+.userchip img,.userchip .av{width:28px;height:28px;border-radius:50%;object-fit:cover}
+.userchip .av{background:var(--grad);display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff}
+.userchip b{font-size:13.5px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.userchip button{background:none;border:none;color:var(--ink-3);font-size:12px;cursor:pointer;font-family:inherit;padding:5px 9px;border-radius:8px}
+.userchip button:hover{color:#fff;background:rgba(255,255,255,.08)}
 </style>
 </head>
 <body>
@@ -189,6 +205,7 @@ a{color:inherit;text-decoration:none}
     <div class="nav-right">
       <span class="badge" id="creditBadge" title="Your video credits"><span style="color:var(--cyan);font-size:13px">◆</span> <b id="credits" style="color:#fff">1,500</b> credits</span>
       <span class="badge"><span class="dot"></span> Live · <span id="usage">0</span> made today</span>
+      <span id="authSlot"></span>
       <button class="btn-up" onclick="location.href='/picsart-style.html#/pricing'">Upgrade ✦</button>
     </div>
   </div>
@@ -290,6 +307,18 @@ a{color:inherit;text-decoration:none}
   <p class="foot">This is your live product. Your AI key stays on the server — visitors never see it. Videos take ~30s–2 min because the AI renders every frame; the progress ring shows live status. To charge customers, add accounts + Stripe with per-plan limits.</p>
 </div>
 
+<div class="modal-bg" id="loginModal">
+  <div class="modal">
+    <button class="x" id="loginClose">×</button>
+    <div style="width:54px;height:54px;border-radius:16px;background:var(--grad);display:grid;place-items:center;margin:0 auto 16px;font-size:26px">✦</div>
+    <h3>Sign in to VisionFlow</h3>
+    <p>Log in to unlock <b style="color:#fff">unlimited credits</b> &amp; save your creations.</p>
+    <input class="gmail" id="gmail" type="email" placeholder="you@gmail.com" autocomplete="email" />
+    <button class="gbtn" id="googleBtn"><svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continue with Google</button>
+    <div style="font-size:11.5px;color:var(--ink-3);margin-top:16px">Demo sign-in · your name is stored only in this browser.</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -357,10 +386,39 @@ var CREDIT_COST={"5":100,"10":100,"15":200,"20":200,"25":250,"30":300,"35":350,"
 function costFor(d){return CREDIT_COST[String(d)]||1;}
 function durLabel(d){return String(d)==="60"?"1-min":d+"s";}
 var creditsEl=$("#credits");
-function getCredits(){try{var v=localStorage.getItem("vf_credits2");return v===null?1500:(parseInt(v,10)||0);}catch(e){return 1500;}}
-function setCredits(n){try{localStorage.setItem("vf_credits2",String(n));}catch(e){}if(creditsEl)creditsEl.textContent=Number(n).toLocaleString();}
-function spendCredits(n){setCredits(Math.max(0,getCredits()-n));}
+function curUser(){try{return JSON.parse(localStorage.getItem("vf_user")||"null");}catch(e){return null;}}
+function isLoggedIn(){return !!curUser();}
+function getCredits(){if(isLoggedIn())return Infinity;try{var v=localStorage.getItem("vf_credits2");return v===null?1500:(parseInt(v,10)||0);}catch(e){return 1500;}}
+function setCredits(n){try{if(!isLoggedIn())localStorage.setItem("vf_credits2",String(n));}catch(e){}if(creditsEl)creditsEl.textContent=isLoggedIn()?"Unlimited":Number(n).toLocaleString();}
+function spendCredits(n){if(isLoggedIn())return;setCredits(Math.max(0,getCredits()-n));}
+function charge(cost){if(isLoggedIn()){showToast("Unlimited plan ✦ — no credits used");return;}spendCredits(cost);showToast("Spent "+cost+" credit"+(cost===1?"":"s")+" · "+getCredits()+" left");}
 setCredits(getCredits());
+
+/* auth / login */
+function renderAuth(){
+  var slot=$("#authSlot");if(!slot)return;var u=curUser();
+  if(u){
+    var ini=((u.name||u.email||"U").trim().charAt(0)||"U").toUpperCase();
+    var av=u.picture?'<img src="'+u.picture+'" alt="">':'<span class="av">'+ini+'</span>';
+    slot.innerHTML='<div class="userchip">'+av+'<b>'+(u.name||u.email)+'</b><button id="logoutBtn">Log out</button></div>';
+    $("#logoutBtn").addEventListener("click",function(){localStorage.removeItem("vf_user");renderAuth();showToast("Logged out");});
+  }else{
+    slot.innerHTML='<button class="btn-up" id="loginBtn" style="background:rgba(255,255,255,.08);box-shadow:none">Log in</button>';
+    $("#loginBtn").addEventListener("click",function(){$("#loginModal").classList.add("show");setTimeout(function(){var g=$("#gmail");if(g)g.focus();},50);});
+  }
+  setCredits(getCredits());
+}
+function doLogin(user){localStorage.setItem("vf_user",JSON.stringify(user));$("#loginModal").classList.remove("show");renderAuth();showToast("Signed in — unlimited credits unlocked ✦");}
+$("#loginClose").addEventListener("click",function(){$("#loginModal").classList.remove("show");});
+$("#loginModal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("show");});
+$("#googleBtn").addEventListener("click",function(){
+  var em=($("#gmail").value||"").trim();
+  if(!/^\S+@\S+\.\S+$/.test(em)){$("#gmail").focus();showToast("Enter your email to continue");return;}
+  var name=em.split("@")[0].replace(/[._]+/g," ").replace(/\b\w/g,function(c){return c.toUpperCase();});
+  doLogin({name:name,email:em});
+});
+$("#gmail").addEventListener("keydown",function(e){if(e.key==="Enter")$("#googleBtn").click();});
+renderAuth();
 function updateGenBtn(){if(busy)return;if(state.mode==="video"){var c=state.audio==="1"?500:costFor(state.duration);goBtn.textContent="Generate ✦ · "+c+" credit"+(c===1?"":"s");}else{goBtn.textContent="Generate ✦";}}
 function updateDurUI(){var d=state.duration,c=costFor(d),dc=$("#durCost"),dm=$("#durMsg");if(dc)dc.textContent=c;if(dm)dm.textContent="This "+durLabel(d)+" video uses "+c+" credit"+(c===1?"":"s")+".";updateGenBtn();}
 
@@ -444,14 +502,14 @@ async function run(){
   try{
     var finalPrompt=isVideo?applyStyle(raw):raw;
     if(useAudio){
-      bumpUses();spendCredits(cost);showToast("Spent "+cost+" credits · "+getCredits()+" left");
+      bumpUses();charge(cost);
       setStep(1);setProg(18,"Rendering HD video with sound…","Veo is generating video + real audio. ~1–2 min — keep this tab open.");
       var r1=await genClip({mode:"video",prompt:finalPrompt,aspect_ratio:state.aspect,audio:true},18,96);
       var m1=extractUrl(r1);if(!m1)throw new Error("Finished, but no video came back.");
       setStep(3);setProg(100,"Done!","");await sleep(300);hideLoading();renderResult(m1,raw,null,true);
       showToast("HD video with sound ready 🔊");
     } else if(nClips>1){
-      bumpUses();spendCredits(cost);showToast("Spent "+cost+" credits · "+getCredits()+" left");
+      bumpUses();charge(cost);
       setStep(1);var clips=[];
       for(var ci=0;ci<nClips;ci++){
         var baseP=18+(ci/nClips)*74, capP=18+((ci+1)/nClips)*74;
@@ -463,7 +521,7 @@ async function run(){
       setStep(3);setProg(100,"Done!","");await sleep(300);hideLoading();renderMulti(clips,raw);
       showToast(clips.length+" clips joined ✦");
     } else {
-      bumpUses();if(cost>0){spendCredits(cost);showToast("Spent "+cost+" credit"+(cost===1?"":"s")+" · "+getCredits()+" left");}
+      bumpUses();if(cost>0)charge(cost);
       setStep(1);setProg(18,isVideo?"Rendering your video…":"Generating your image…",isVideo?"This usually takes 1–3 minutes. Keep this tab open — the AI is rendering every frame.":"Almost there…");
       var pl={mode:state.mode,prompt:finalPrompt,aspect_ratio:state.aspect};
       if(isVideo)pl.duration=state.duration;else pl.fast=state.fast==="1";
