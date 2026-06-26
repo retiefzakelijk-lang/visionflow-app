@@ -28,12 +28,13 @@ a{color:inherit;text-decoration:none}
 
 /* ambient background */
 .bg-fx{position:fixed;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
-.orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.42}
-.orb.a{width:600px;height:600px;background:radial-gradient(circle,#7c3aed,transparent 70%);top:-200px;left:-160px;animation:float1 18s ease-in-out infinite}
-.orb.b{width:640px;height:640px;background:radial-gradient(circle,#0e7490,transparent 70%);bottom:-260px;right:-180px;animation:float2 22s ease-in-out infinite}
-.orb.c{width:480px;height:480px;background:radial-gradient(circle,#db2777,transparent 70%);top:38%;left:54%;animation:float1 26s ease-in-out infinite}
-@keyframes float1{50%{transform:translate(40px,-30px)}}
-@keyframes float2{50%{transform:translate(-50px,30px)}}
+/* static orbs — no animation/heavy blur so video playback stays smooth */
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.38}
+.orb.a{width:560px;height:560px;background:radial-gradient(circle,#7c3aed,transparent 70%);top:-200px;left:-160px}
+.orb.b{width:600px;height:600px;background:radial-gradient(circle,#0e7490,transparent 70%);bottom:-260px;right:-180px}
+.orb.c{width:440px;height:440px;background:radial-gradient(circle,#db2777,transparent 70%);top:38%;left:54%}
+/* while a video result is on screen, drop the ambient layers entirely for max smoothness */
+body.playing .bg-fx,body.playing .grid-fx{display:none}
 .grid-fx{position:fixed;inset:0;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 25%,transparent 78%);pointer-events:none}
 .wrap{max-width:1240px;margin:0 auto;padding:0 24px}
 
@@ -425,6 +426,7 @@ function updateDurUI(){var d=state.duration,c=costFor(d),dc=$("#durCost"),dm=$("
 /* loading UI */
 var STEP_DEFS=[["Understanding prompt","🧠"],["Generating frames","🎞️"],["Adding voiceover","🎙️"],["Finalizing","✨"]];
 function showLoading(isVideo,withVoice){
+  document.body.classList.remove("playing");
   empty.style.display="none";result.classList.remove("show");errBox.classList.remove("show");loading.classList.add("show");
   var steps=isVideo?(withVoice?[0,1,2,3]:[0,1,3]):[0,1,3];
   $("#steps").innerHTML=steps.map(function(i){return '<span class="step" data-i="'+i+'">'+STEP_DEFS[i][1]+' '+STEP_DEFS[i][0]+'</span>';}).join('');
@@ -497,6 +499,7 @@ async function run(){
     rv.addEventListener("ended",function(){idx=(idx+1)%clips.length;rv.src=clips[idx];rv.play().catch(function(){});});
     $("#again").addEventListener("click",run);
     wireMusic(rv);
+    document.body.classList.add("playing");
   }
 
   try{
@@ -514,8 +517,7 @@ async function run(){
       for(var ci=0;ci<nClips;ci++){
         var baseP=18+(ci/nClips)*74, capP=18+((ci+1)/nClips)*74;
         setProg(baseP,"Rendering clip "+(ci+1)+" of "+nClips+"…","Your "+(nClips*10)+"s video is built from "+nClips+" clips joined together. Keep this tab open.");
-        var rr=await genClip({mode:"video",prompt:finalPrompt,aspect_ratio:state.aspect,duration:"10"},baseP,capP);
-        var mm=extractUrl(rr);if(mm&&mm.url)clips.push(mm.url);
+        try{var rr=await genClip({mode:"video",prompt:finalPrompt,aspect_ratio:state.aspect,duration:"10"},baseP,capP);var mm=extractUrl(rr);if(mm&&mm.url)clips.push(mm.url);}catch(ce){if(clips.length===0)throw ce;break;}
       }
       if(!clips.length)throw new Error("No clips were produced.");
       setStep(3);setProg(100,"Done!","");await sleep(300);hideLoading();renderMulti(clips,raw);
@@ -567,6 +569,7 @@ function renderResult(media,prompt,audioUrl,hasAudio){
     (isVid&&hasAudio?'<div style="font-size:12px;color:var(--green);margin-top:10px">🔊 This HD clip has <b>built-in sound</b> — press play to hear it.</div>':(isVid&&!audioUrl?'<div style="font-size:12px;color:var(--ink-2);margin-top:10px">🔊 The raw AI clip has no built-in sound — tap <b>Add music</b> for a song, or turn on <b>Voiceover</b> before generating so your characters talk.</div>':''))+
     '<div class="meta">"'+esc(prompt)+'"'+(audioUrl?' · Voice: '+esc(state.voice):'')+'</div>';
   result.classList.add("show");
+  document.body.classList.toggle("playing",isVid);
   $("#dlBtn").addEventListener("click",function(){downloadRemote(media.url,name);});
   $("#again").addEventListener("click",run);
   if(isVid){
