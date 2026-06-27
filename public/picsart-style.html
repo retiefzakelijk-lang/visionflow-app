@@ -725,7 +725,7 @@ pages['/pricing']=function(){
 afterRender['/pricing']=function(){
   renderPriceInto('priceGrid2',false);
   var y=false;document.getElementById('bsw2').addEventListener('click',function(){y=!y;this.classList.toggle('on',y);renderPriceInto('priceGrid2',y);});
-  var faqs=[['How do credits work?','Each plan gives you credits monthly. Making a video spends credits based on length: a 10-second video is 100 credits, 20s is 200, 30s is 300, and a full minute is 500. So 750 credits (Starter) = seven 10s clips, or one 1-minute video plus a couple short ones.'],['Can I cancel anytime?','Absolutely. Plans are monthly or yearly and you can cancel from your account at any time.'],['What can I make?','AI images, AI video (5s to 1 min), talking characters, avatars, plus full photo & video editing.'],['What about the Lifetime plan?','Lifetime is a one-time $200 payment with unlimited videos and images, forever — no monthly credit limit.']];
+  var faqs=[['How do credits work?','Each plan gives you credits monthly. Making a video spends credits based on length: a 10-second video is 100 credits, 20s is 200, 30s is 300, and a full minute is 500. So 750 credits (Starter) = seven 10s clips, or one 1-minute video plus a couple short ones.'],['Can I cancel anytime?','Absolutely. Plans are monthly or yearly and you can cancel from your account at any time.'],['What can I make?','AI images, AI video (5s to 1 min), talking characters, avatars, plus full photo & video editing.'],['What about the 1 Year plan?','The 1 Year plan is a single $499 payment that gives you unlimited videos and images for 12 months — no monthly fees during that year.']];
   var f=document.getElementById('faq');f.innerHTML=faqs.map(function(q){return '<div class="q"><b>'+q[0]+'</b><p>'+q[1]+'</p></div>';}).join('');
   f.querySelectorAll('.q').forEach(function(q){q.addEventListener('click',function(){q.classList.toggle('open');});});
 };
@@ -814,17 +814,17 @@ var plans=[
  {n:'Pro',d:'For everyday creators.',m:24.99,y:19.99,credits:'1,500 credits / month',f:['≈ 15 short videos (10s = 100 credits)','Lengths from 5s up to 1 min','+ ~250 AI images','Talking characters & avatars'],hot:true},
  {n:'Ultra',d:'For power users & teams.',m:49.99,y:39.99,credits:'3,000 credits / month',f:['≈ 30 short videos (10s = 100 credits)','Lengths from 5s up to 1 min','+ ~500 AI images','Priority render queue']},
  {n:'Max',d:'For studios & heavy usage.',m:99.99,y:79.99,credits:'7,500 credits / month',f:['≈ 75 short videos (10s = 100 credits)','Lengths from 5s up to 1 min','+ ~1,250 AI images','Highest priority + API access']},
- {n:'Lifetime',d:'Pay once. Unlimited forever.',life:200,credits:'Unlimited credits',f:['Unlimited AI videos (any length)','Unlimited AI images','Every tool, model &amp; feature','One-time payment · no subscription, ever'],best:true}
+ {n:'1 Year',d:'Everything, for a full year.',life:499,lifeUnit:'/ year',lifeSub:'One payment · 12 months of access',credits:'Unlimited for 12 months',f:['Unlimited AI videos (any length)','Unlimited AI images','Every tool, model &amp; feature','One payment · a full year, no monthly fees'],best:true}
 ];
 function renderPriceInto(id,yearly){document.getElementById(id).innerHTML=plans.map(function(p){
   var priceHtml;
-  if(p.life){priceHtml='<div class="amt">$'+p.life+'<small> once</small></div><div style="font-size:12px;color:var(--green);margin-top:2px;font-weight:700">Pay once · yours forever</div>';}
+  if(p.life){priceHtml='<div class="amt">$'+p.life+'<small> '+(p.lifeUnit||'once')+'</small></div><div style="font-size:12px;color:var(--green);margin-top:2px;font-weight:700">'+(p.lifeSub||'Pay once · yours forever')+'</div>';}
   else{var v=yearly?p.y:p.m;var was=yearly?'<span style="text-decoration:line-through;color:var(--ink-3);font-size:18px;margin-right:8px">$'+p.m+'</span>':'';priceHtml='<div class="amt">'+was+'$'+v+'<small>/mo</small></div>'+(yearly?'<div style="font-size:12px;color:var(--ink-3);margin-top:2px">billed yearly</div>':'');}
   return '<div class="pcard'+(p.hot?' hot':'')+(p.best?' best':'')+'"><div class="pn">'+p.n+'</div><div class="pd">'+p.d+'</div>'+
     '<div style="display:flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px;margin-bottom:14px"><span style="color:var(--pink)">✦</span>'+p.credits+'</div>'+
     priceHtml+
     '<ul>'+p.f.map(function(x){return '<li><span class="ck">✓</span>'+x+'</li>';}).join('')+'</ul>'+
-    '<button class="btn '+(p.hot||p.best?'btn-grad':'btn-out')+'" data-go="/signup">'+(p.life?'Get Lifetime':'Choose '+p.n)+'</button></div>';
+    '<button class="btn '+(p.hot||p.best?'btn-grad':'btn-out')+'" data-go="/signup">'+(p.life?'Get '+p.n:'Choose '+p.n)+'</button></div>';
 }).join('');}
 renderPriceInto('priceGrid',false);
 document.getElementById('bsw').addEventListener('click',function(){this.classList.toggle('on');renderPriceInto('priceGrid',this.classList.contains('on'));});
