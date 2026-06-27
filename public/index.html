@@ -257,6 +257,7 @@ body.playing .bg-fx,body.playing .grid-fx{display:none}
         <label>Sound</label>
         <div class="seg" id="audioSeg"><button class="sel" data-v="0">Silent (fast)</button><button data-v="1">🔊 AI sound (HD)</button></div>
         <div id="audioNote" style="font-size:12px;color:var(--ink-2);margin-top:9px;display:none">HD model with real built-in audio &amp; voices · ~8s clip · costs 500 credits.</div>
+        <input class="selbox" id="audioDialogue" type="text" maxlength="300" placeholder="What should they say out loud? e.g. I'm pregnant!" style="margin-top:11px;display:none" />
       </div>
 
       <div class="field" id="durField" style="display:none">
@@ -371,7 +372,7 @@ document.querySelectorAll('#tabs .tab').forEach(function(t){t.addEventListener('
 
 /* segmented controls */
 document.querySelectorAll('.seg').forEach(function(seg){seg.querySelectorAll('button').forEach(function(b){b.addEventListener('click',function(){seg.querySelectorAll('button').forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');
-  var id=seg.id;if(id==='aspect')state.aspect=b.dataset.v;else if(id==='dur'){state.duration=b.dataset.v;updateDurUI();}else if(id==='speed')state.fast=b.dataset.v;else if(id==='voiceon'){state.voiceon=b.dataset.v;$("#narration").style.display=b.dataset.v==='1'?'':'none';}else if(id==='audioSeg'){state.audio=b.dataset.v;var on=b.dataset.v==='1';$("#audioNote").style.display=on?'':'none';$("#durField").style.display=on?'none':'';$("#voiceField").style.display=on?'none':'';updateGenBtn();}
+  var id=seg.id;if(id==='aspect')state.aspect=b.dataset.v;else if(id==='dur'){state.duration=b.dataset.v;updateDurUI();}else if(id==='speed')state.fast=b.dataset.v;else if(id==='voiceon'){state.voiceon=b.dataset.v;$("#narration").style.display=b.dataset.v==='1'?'':'none';}else if(id==='audioSeg'){state.audio=b.dataset.v;var on=b.dataset.v==='1';$("#audioNote").style.display=on?'':'none';var ad=$("#audioDialogue");if(ad)ad.style.display=on?'':'none';$("#durField").style.display=on?'none':'';$("#voiceField").style.display=on?'none':'';updateGenBtn();}
 });});});
 $("#voiceSelect").addEventListener('change',function(){state.voice=this.value;});
 promptEl.addEventListener('input',function(){promptEl.style.height='auto';promptEl.style.height=Math.min(promptEl.scrollHeight,170)+'px';});
@@ -507,7 +508,9 @@ async function run(){
     if(useAudio){
       bumpUses();charge(cost);
       setStep(1);setProg(18,"Rendering HD video with sound…","Veo is generating video + real audio. ~1–2 min — keep this tab open.");
-      var r1=await genClip({mode:"video",prompt:finalPrompt,aspect_ratio:state.aspect,audio:true},18,96);
+      var dlg=($("#audioDialogue").value||"").trim();
+      var audioPrompt=finalPrompt+(dlg?'. The characters speak out loud in clear English, saying: "'+dlg+'". Lip-synced dialogue with audible voices.':'. The characters talk and speak out loud to each other in clear English, with audible lip-synced dialogue.');
+      var r1=await genClip({mode:"video",prompt:audioPrompt,aspect_ratio:state.aspect,audio:true},18,96);
       var m1=extractUrl(r1);if(!m1)throw new Error("Finished, but no video came back.");
       setStep(3);setProg(100,"Done!","");await sleep(300);hideLoading();renderResult(m1,raw,null,true);
       showToast("HD video with sound ready 🔊");
@@ -554,19 +557,20 @@ function esc(s){return (s||"").replace(/[&<>"']/g,function(c){return{"&":"&amp;"
 function renderResult(media,prompt,audioUrl,hasAudio){
   empty.style.display="none";
   var isVid=media.kind==="video";
-  var vAttrs=hasAudio?'preload="auto" loop playsinline controls':'preload="auto" autoplay loop playsinline controls muted';
-  var node=isVid?'<video id="rv" src="'+media.url+'" '+vAttrs+'></video><div class="vload" id="vload"><div class="vspin"></div><span>Loading video…</span></div>':'<img src="'+media.url+'" alt="'+esc(prompt)+'">';
-  var audio=audioUrl?'<audio id="ra" src="'+audioUrl+'" autoplay controls loop></audio>':"";
+  var node=isVid?'<video id="rv" src="'+media.url+'" preload="auto" autoplay loop playsinline controls muted></video><div class="vload" id="vload"><div class="vspin"></div><span>Loading video…</span></div>':'<img src="'+media.url+'" alt="'+esc(prompt)+'">';
+  var audio=audioUrl?'<audio id="ra" src="'+audioUrl+'" controls loop style="width:100%;margin-top:10px"></audio>':"";
   var name="visionflow-"+slug(prompt)+(isVid?".mp4":".png");
+  var hasSound=isVid&&(hasAudio||audioUrl);
+  var soundBtn=hasSound?'<button class="bsoft primary" id="soundBtn" style="background:linear-gradient(120deg,#22d3ee,#8b5cf6);font-size:14.5px">🔊 Play with sound</button>':"";
   var vbtn=audioUrl?'<button class="bsoft" id="dlA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg>Voiceover</button>':"";
   var musicBtn=isVid?'<button class="bsoft" id="addMusic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>Add music</button>':"";
   result.innerHTML='<div class="media-wrap">'+node+'</div>'+audio+
     '<audio id="bgm" loop controls style="width:100%;margin-top:12px;display:none"></audio><input id="musicFile" type="file" accept="audio/*" style="display:none">'+
-    '<div class="actions"><button class="bsoft primary" id="dlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg>Download '+(isVid?"video":"image")+'</button>'+musicBtn+vbtn+
+    '<div class="actions">'+soundBtn+'<button class="bsoft'+(hasSound?'':' primary')+'" id="dlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg>Download '+(isVid?"video":"image")+'</button>'+musicBtn+vbtn+
     '<button class="bsoft" id="again">↻ Generate again</button>'+
     '<a class="bsoft" href="'+media.url+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M21 3l-9 9"/></svg>Open</a></div>'+
-    '<div id="musicRow" style="display:none;margin-top:11px;font-size:13px;color:var(--ink-2);display:none;align-items:center;gap:10px;flex-wrap:wrap"></div>'+
-    (isVid&&hasAudio?'<div style="font-size:12px;color:var(--green);margin-top:10px">🔊 This HD clip has <b>built-in sound</b> — press play to hear it.</div>':(isVid&&!audioUrl?'<div style="font-size:12px;color:var(--ink-2);margin-top:10px">🔊 The raw AI clip has no built-in sound — tap <b>Add music</b> for a song, or turn on <b>Voiceover</b> before generating so your characters talk.</div>':''))+
+    '<div id="musicRow" style="display:none;margin-top:11px;font-size:13px;color:var(--ink-2);align-items:center;gap:10px;flex-wrap:wrap"></div>'+
+    (hasSound?'<div style="font-size:12.5px;color:var(--green);margin-top:10px">🔊 This video has '+(hasAudio?'<b>built-in voices &amp; sound</b>':'a <b>voiceover</b>')+' — press <b>Play with sound</b> above to hear it (browsers start videos muted).</div>':(isVid?'<div style="font-size:12px;color:var(--ink-2);margin-top:10px">🔊 This clip has no audio — tap <b>Add music</b>, or turn on <b>🔊 AI sound</b> (or Voiceover) before generating so they speak.</div>':''))+
     '<div class="meta">"'+esc(prompt)+'"'+(audioUrl?' · Voice: '+esc(state.voice):'')+'</div>';
   result.classList.add("show");
   document.body.classList.toggle("playing",isVid);
@@ -576,6 +580,7 @@ function renderResult(media,prompt,audioUrl,hasAudio){
     var rv=$("#rv"),vl=$("#vload");
     var hide=function(){if(vl)vl.style.display="none";};
     if(rv){["loadeddata","canplay","playing"].forEach(function(ev){rv.addEventListener(ev,hide);});setTimeout(hide,9000);}
+    var sb=$("#soundBtn");if(sb)sb.addEventListener("click",function(){var a=$("#ra");if(rv){rv.muted=false;rv.volume=1;rv.play().catch(function(){});}if(a){a.currentTime=0;a.volume=1;a.play().catch(function(){});}sb.textContent="🔊 Sound on";showToast("Sound on 🔊");});
     var mf=$("#musicFile"),bgm=$("#bgm"),addBtn=$("#addMusic"),mrow=$("#musicRow");
     if(addBtn){addBtn.addEventListener("click",function(){mf.click();});}
     if(mf){mf.addEventListener("change",function(){
