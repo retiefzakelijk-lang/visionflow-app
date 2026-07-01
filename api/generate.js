@@ -7,6 +7,8 @@ const MODELS = {
   video_audio: process.env.FAL_VIDEO_AUDIO_MODEL || "fal-ai/veo3/fast",
   image:       process.env.FAL_IMAGE_MODEL || "fal-ai/flux/dev",
   image_fast:  process.env.FAL_IMAGE_FAST_MODEL || "fal-ai/flux/schnell",
+  img_video:   process.env.FAL_IMG_VIDEO_MODEL || "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
+  img_image:   process.env.FAL_IMG_IMAGE_MODEL || "fal-ai/flux/dev/image-to-image",
 };
 
 const HITS = new Map();
@@ -43,14 +45,32 @@ export default async function handler(req, res) {
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "anon";
   if (rateLimited(ip)) { res.status(429).json({ error: "Too many requests — slow down a moment." }); return; }
 
-  const { mode, prompt, aspect_ratio, duration, fast, audio } = body;
-  if (!prompt || typeof prompt !== "string" || prompt.trim().length < 2 || prompt.length > 1500) {
+  const { mode, prompt, aspect_ratio, duration, fast, audio, image_url } = body;
+  const fromPhoto = mode === "img2vid" || mode === "img2img";
+
+  if (fromPhoto) {
+    if (!image_url || typeof image_url !== "string" || !/^(data:image\/|https:\/\/)/.test(image_url)) {
+      res.status(400).json({ error: "Please attach a valid image (jpg/png)." });
+      return;
+    }
+    if (image_url.length > 8000000) { res.status(413).json({ error: "That image is too large — please use a smaller photo." }); return; }
+  } else if (!prompt || typeof prompt !== "string" || prompt.trim().length < 2 || prompt.length > 1500) {
     res.status(400).json({ error: "Please provide a prompt (2-1500 characters)." });
     return;
   }
 
   let model, input;
-  if (mode === "video") {
+  if (mode === "img2vid") {
+    // Animate an uploaded photo into a video (image-to-video).
+    model = MODELS.img_video;
+    input = { prompt: (prompt && prompt.trim()) || "animate this image with natural, cinematic motion", image_url: image_url };
+    const dnum = parseInt(duration, 10) || 5;
+    input.duration = dnum >= 10 ? "10" : "5";
+  } else if (mode === "img2img") {
+    // Restyle / transform an uploaded photo into a new AI image (image-to-image).
+    model = MODELS.img_image;
+    input = { prompt: (prompt && prompt.trim()) || "enhance and restyle this photo into a polished AI image, high detail", image_url: image_url, strength: 0.8, num_images: 1 };
+  } else if (mode === "video") {
     const useAudio = audio === true || audio === "true";
     if (useAudio) {
       // Audio-capable model (Veo) — generates the clip WITH built-in sound/voices.
@@ -87,7 +107,7 @@ export default async function handler(req, res) {
       status_url: data.status_url,
       response_url: data.response_url,
       model,
-      mode: mode === "video" ? "video" : "image",
+      mode: (mode === "video" || mode === "img2vid") ? "video" : "image",
     });
   } catch (e) {
     res.status(502).json({ error: "Could not reach fal.ai: " + (e && e.message ? e.message : String(e)) });
