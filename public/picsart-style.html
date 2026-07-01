@@ -254,6 +254,37 @@ footer{background:var(--bg-2);padding:60px 0 34px;margin-top:70px;border-top:1px
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:#fff;color:#0a0813;padding:13px 22px;border-radius:14px;font-size:14px;font-weight:700;z-index:200;transition:transform .4s var(--ease);box-shadow:var(--shadow)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 ::selection{background:rgba(255,46,147,.35)}
+/* ===== support chat widget ===== */
+.chat-launch{position:fixed;right:22px;bottom:22px;z-index:400;width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;background:var(--grad);box-shadow:0 14px 34px -8px rgba(194,17,200,.7);display:grid;place-items:center;transition:transform .2s var(--ease)}
+.chat-launch:hover{transform:translateY(-3px) scale(1.04)}
+.chat-launch svg{width:27px;height:27px}
+.chat-launch .cbadge{position:absolute;top:-3px;right:-3px;width:20px;height:20px;border-radius:50%;background:#34d399;border:2px solid var(--bg);color:#04120c;font-size:11px;font-weight:800;display:grid;place-items:center}
+.chat-panel{position:fixed;right:22px;bottom:22px;z-index:401;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 40px));background:var(--bg-2);border:1px solid var(--line);border-radius:22px;box-shadow:0 40px 90px -24px rgba(0,0,0,.85);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(24px) scale(.97);pointer-events:none;transition:.26s var(--ease)}
+.chat-panel.open{opacity:1;transform:none;pointer-events:auto}
+.chat-head{background:var(--grad);padding:16px 18px;display:flex;align-items:center;gap:12px}
+.chat-head .av{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:20px}
+.chat-head h4{font-size:15px;color:#fff;margin:0;font-family:Sora,Inter,sans-serif}
+.chat-head p{font-size:11.5px;color:rgba(255,255,255,.85);margin:2px 0 0;display:flex;align-items:center;gap:6px}
+.chat-head p .dot{width:7px;height:7px;border-radius:50%;background:#a7ffcf;box-shadow:0 0 8px #a7ffcf}
+.chat-head .cx{margin-left:auto;background:rgba(255,255,255,.18);border:none;width:30px;height:30px;border-radius:9px;color:#fff;font-size:18px;cursor:pointer;line-height:1}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:11px;background:var(--bg)}
+.cmsg{max-width:82%;padding:11px 14px;border-radius:15px;font-size:13.5px;line-height:1.5}
+.cmsg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:5px;color:var(--ink)}
+.cmsg.me{align-self:flex-end;background:var(--grad);color:#fff;border-bottom-right-radius:5px}
+.cmsg a{color:#ff8fc7;text-decoration:underline}
+.cmsg.me a{color:#fff}
+.cqr{display:flex;flex-wrap:wrap;gap:7px;padding:0 16px 12px;background:var(--bg)}
+.cqr button{font-size:12px;font-weight:600;color:var(--ink-2);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:100px;padding:7px 12px;cursor:pointer;font-family:inherit;transition:.15s}
+.cqr button:hover{color:#fff;border-color:#c211c8;background:rgba(194,17,200,.15)}
+.chat-in{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:var(--bg-2)}
+.chat-in input{flex:1;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:11px 14px;color:#fff;font-family:inherit;font-size:14px;outline:none}
+.chat-in input:focus{border-color:#c211c8}
+.chat-in button{background:var(--grad);border:none;width:44px;border-radius:12px;cursor:pointer;display:grid;place-items:center}
+.chat-in button svg{width:18px;height:18px}
+.ctyping{align-self:flex-start;background:var(--card);border:1px solid var(--line);padding:12px 15px;border-radius:15px;border-bottom-left-radius:5px;display:flex;gap:4px}
+.ctyping span{width:7px;height:7px;border-radius:50%;background:var(--ink-3);animation:cbounce 1.2s infinite}
+.ctyping span:nth-child(2){animation-delay:.15s}.ctyping span:nth-child(3){animation-delay:.3s}
+@keyframes cbounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
 </style>
 </head>
 <body>
@@ -379,6 +410,19 @@ footer{background:var(--bg-2);padding:60px 0 34px;margin-top:70px;border-top:1px
 </div></footer>
 
 <div class="toast" id="toast"></div>
+
+<!-- ===== Support chat bot ===== -->
+<button class="chat-launch" id="chatLaunch" aria-label="Open support chat"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.9-.9L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5Z"/></svg><span class="cbadge">1</span></button>
+<div class="chat-panel" id="chatPanel" role="dialog" aria-label="Zin support chat">
+  <div class="chat-head">
+    <div class="av">✦</div>
+    <div><h4>Zin Support</h4><p><span class="dot"></span> Typically replies instantly</p></div>
+    <button class="cx" id="chatClose" aria-label="Close">×</button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"></div>
+  <div class="cqr" id="chatQr"></div>
+  <div class="chat-in"><input id="chatInput" type="text" placeholder="Ask us anything…" autocomplete="off" /><button id="chatSend" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></button></div>
+</div>
 
 <script>
 /* ===== media helpers (real people + themed photos + people videos) ===== */
@@ -848,6 +892,46 @@ document.getElementById('bsw').addEventListener('click',function(){this.classLis
 function bindReveal(){var els=document.querySelectorAll('.reveal:not(.in)');var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.1});els.forEach(function(el){io.observe(el);});}
 bindReveal();
 router();
+
+/* ===== Support chat bot ===== */
+(function(){
+  var KB=[
+    {k:['price','pricing','cost','plan','plans','subscription','how much','prijs','prijzen','abonnement','kosten','duur'],a:'Our plans:<br>• <b>Starter</b> — $12.99/mo · 750 credits<br>• <b>Pro</b> — $24.99/mo · 1,500 credits<br>• <b>Ultra</b> — $49.99/mo · 3,000 credits<br>• <b>Max</b> — $99.99/mo · 7,500 credits<br>• <b>1 Year</b> — $499 · unlimited for 12 months<br><br>See details on the <a data-go="/pricing">Pricing page</a>.'},
+    {k:['credit','credits','how many videos','hoeveel'],a:'Credits are spent per video by length: a 10s video = <b>100 credits</b>, 20s = 200, 30s = 300, 1 min = 500. HD videos with real voices cost <b>500 credits</b>. Images are included. So 750 credits ≈ 7 short clips.'},
+    {k:['sound','audio','voice','voices','speak','speaking','talk','hear','geluid','stem','praten','horen'],a:'For sound: in the video studio turn on <b>🔊 AI sound (HD)</b>, type what they should say in the "What should they say" box, then Generate. When it\'s ready, press <b>🔊 Play with sound</b> (browsers start videos muted). You can also add your own song with <b>🎵 Add music</b>.'},
+    {k:['length','seconds','second','long','duration','minute','lengte','seconde','langer'],a:'You can choose 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 seconds or 1 minute. Videos over 10s are built from several clips joined into one longer video.'},
+    {k:['how','make','create','generate','start','begin','maak','maken'],a:'Easy — open the <a data-go="/studio?tool=ai-video">AI Video studio</a>, pick a style (like 🍓 Talking Fruit), choose a length, type your idea and hit <b>Generate</b>. Your video is ready in 1–3 minutes.'},
+    {k:['fruit','banana','strawberry','talking'],a:'Yes! Choose the <b>🍓 Talking Fruit</b> style to make the viral banana-man / strawberry-woman videos. Turn on 🔊 AI sound so they actually talk. <a data-go="/studio?tool=ai-video">Open the studio</a>.'},
+    {k:['login','log in','sign in','signin','account','google','inloggen'],a:'Click <b>Log in</b> and choose "Continue with Google". Logging in unlocks your credits and saves your creations.'},
+    {k:['pay','payment','stripe','card','checkout','betalen','betaling','betaal'],a:'Payments are handled securely by <b>Stripe</b> (cards, iDEAL and more). Pick a plan on the <a data-go="/pricing">Pricing page</a> and you\'ll go to a secure checkout.'},
+    {k:['cancel','refund','stop','opzeggen','annuleren','geld terug','refund'],a:'You can cancel anytime from your account and keep access until the period ends. For refunds, email <b>support@zin.ai</b>.'},
+    {k:['download','save','opslaan','downloaden'],a:'When a video is ready, click <b>Download video</b> to save the MP4. For images use Download image.'},
+    {k:['slow','loading','lag','freeze','traag','laadt','hapert'],a:'Videos take 1–3 minutes because the AI renders every frame — keep the tab open. If a finished video loads slowly, give it a few seconds to stream from the server.'},
+    {k:['free','trial','gratis','proberen'],a:'You can try the core tools for free. Paid plans add more credits, HD sound, longer videos and commercial use — see the <a data-go="/pricing">Pricing page</a>.'},
+    {k:['contact','email','human','support','helpen','iemand'],a:'You can reach a real person at <b>support@zin.ai</b> — tell us what you need and we\'ll reply fast!'},
+    {k:['hi','hello','hey','hallo','hoi','yo','goedemorgen','goedemiddag'],a:'Hey! 👋 I\'m the Zin assistant. Ask me about pricing, credits, sound, or how to make a video.'},
+    {k:['thanks','thank','bedankt','dank','thx'],a:'You\'re welcome! 🎬 Anything else I can help with?'}
+  ];
+  var QUICK=['Pricing','How do credits work?','How to make a video','How do I get sound?','Contact support'];
+  var launch=document.getElementById('chatLaunch'),panel=document.getElementById('chatPanel'),closeB=document.getElementById('chatClose'),
+      msgs=document.getElementById('chatMsgs'),qr=document.getElementById('chatQr'),input=document.getElementById('chatInput'),send=document.getElementById('chatSend'),
+      started=false;
+  function answer(q){q=(q||'').toLowerCase();var best=null,score=0;KB.forEach(function(e){var s=0;e.k.forEach(function(kw){if(q.indexOf(kw)>-1)s+=kw.length;});if(s>score){score=s;best=e;}});
+    return best?best.a:'I\'m not sure about that one 🤔 — but our team can help! Email <b>support@zin.ai</b>, or ask me about pricing, credits, sound, or how to make a video.';}
+  function add(html,who){var d=document.createElement('div');d.className='cmsg '+who;d.innerHTML=html;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
+  function botSay(html){var t=document.createElement('div');t.className='ctyping';t.innerHTML='<span></span><span></span><span></span>';msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
+    setTimeout(function(){t.remove();add(html,'bot');},600+Math.min(html.length*7,900));}
+  function renderQuick(){qr.innerHTML=QUICK.map(function(x){return '<button>'+x+'</button>';}).join('');
+    qr.querySelectorAll('button').forEach(function(b){b.addEventListener('click',function(){userSend(b.textContent);});});}
+  function userSend(text){text=(text||'').trim();if(!text)return;add(text.replace(/[<>]/g,''),'me');input.value='';botSay(answer(text));}
+  function openChat(){panel.classList.add('open');launch.style.display='none';var bd=launch.querySelector('.cbadge');if(bd)bd.remove();
+    if(!started){started=true;botSay('Hi! 👋 Welcome to <b>Zin — AI Video Generator</b>. How can I help you today?');renderQuick();}
+    setTimeout(function(){input.focus();},250);}
+  function closeChat(){panel.classList.remove('open');launch.style.display='grid';}
+  launch.addEventListener('click',openChat);closeB.addEventListener('click',closeChat);
+  send.addEventListener('click',function(){userSend(input.value);});
+  input.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();userSend(input.value);}});
+})();
 </script>
 </body>
 </html>
