@@ -229,6 +229,20 @@ body.playing .bg-fx,body.playing .grid-fx{display:none}
       </div>
 
       <div class="field">
+        <label>Start from a photo <span style="text-transform:none;letter-spacing:0;color:var(--ink-3);font-weight:500">(optional)</span></label>
+        <div id="photoDrop" style="border:1.5px dashed var(--line-2);border-radius:14px;padding:18px;text-align:center;cursor:pointer;background:rgba(255,255,255,.03);transition:.18s">
+          <div style="font-size:24px;margin-bottom:6px">📷</div>
+          <div style="font-size:13px;color:var(--ink-2);font-weight:600">Upload a photo to turn into AI</div>
+          <div style="font-size:11.5px;color:var(--ink-3);margin-top:3px">On <b>Image</b> = restyle it · on <b>Video</b> = bring it to life</div>
+        </div>
+        <input id="photoFile" type="file" accept="image/*" style="display:none" />
+        <div id="photoPrev" style="display:none;margin-top:10px;position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line)">
+          <img id="photoImg" style="width:100%;max-height:180px;object-fit:cover;display:block" />
+          <button id="photoRemove" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.65);border:none;color:#fff;width:28px;height:28px;border-radius:8px;font-size:16px;cursor:pointer">×</button>
+        </div>
+      </div>
+
+      <div class="field">
         <label>Prompt</label>
         <div class="promptbox">
           <textarea id="prompt" rows="3" placeholder="Describe your image — e.g. &quot;a fox in a misty forest, golden light, photoreal&quot;"></textarea>
@@ -325,7 +339,7 @@ body.playing .bg-fx,body.playing .grid-fx{display:none}
 
 <script>
 var $=function(s){return document.querySelector(s);};
-var state={mode:"image",aspect:"1:1",duration:"5",fast:"0",voiceon:"0",voice:"Zephyr",style:"",audio:"0"};
+var state={mode:"image",aspect:"1:1",duration:"5",fast:"0",voiceon:"0",voice:"Zephyr",style:"",audio:"0",photoData:null};
 var busy=false,toastT,timerT;
 var empty=$("#empty"),loading=$("#loading"),result=$("#result"),errBox=$("#err"),goBtn=$("#go"),promptEl=$("#prompt"),usageEl=$("#usage");
 
@@ -367,7 +381,7 @@ document.querySelectorAll('#tabs .tab').forEach(function(t){t.addEventListener('
   $("#voiceField").style.display=(v&&state.audio!=="1")?"":"none";
   $("#speedField").style.display=v?"none":"";
   promptEl.placeholder=v?'Describe your video — e.g. "a strawberry and banana singing, pixar style"':'Describe your image — e.g. "a fox in a misty forest, golden light, photoreal"';
-  renderChips();if(v)updateDurUI();else updateGenBtn();
+  renderChips();if(v)updateDurUI();else updateGenBtn();if(typeof updatePhotoHint==="function")updatePhotoHint();
 });});
 
 /* segmented controls */
@@ -446,13 +460,14 @@ async function run(){
   if(busy)return;
   var isVideo=state.mode==="video";
   var raw=promptEl.value.trim();
-  if(raw.length<2&&!(isVideo&&state.style)){showToast("Please enter a prompt first.");promptEl.focus();return;}
-  var useAudio=isVideo&&state.audio==="1";
+  var hasPhoto=!!state.photoData;
+  if(raw.length<2&&!hasPhoto&&!(isVideo&&state.style)){showToast("Please enter a prompt first.");promptEl.focus();return;}
+  var useAudio=isVideo&&!hasPhoto&&state.audio==="1";
   var durN=parseInt(state.duration,10)||5;
-  var nClips=(isVideo&&!useAudio&&durN>10)?Math.min(6,Math.ceil(durN/10)):1;
+  var nClips=(isVideo&&!hasPhoto&&!useAudio&&durN>10)?Math.min(6,Math.ceil(durN/10)):1;
   var cost=isVideo?(useAudio?500:costFor(state.duration)):0;
   /* credits never block generation in this build */
-  var withVoice=isVideo&&!useAudio&&state.voiceon==="1";
+  var withVoice=isVideo&&!useAudio&&!hasPhoto&&state.voiceon==="1";
   busy=true;goBtn.disabled=true;goBtn.textContent="Generating…";
   showLoading(isVideo,withVoice);setStep(0);setProg(6,"Submitting…","Sending your prompt to the AI engine.");startTimer();
 
@@ -505,7 +520,16 @@ async function run(){
 
   try{
     var finalPrompt=isVideo?applyStyle(raw):raw;
-    if(useAudio){
+    if(hasPhoto){
+      bumpUses();if(cost>0)charge(cost);
+      setStep(1);setProg(18,isVideo?"Bringing your photo to life…":"Restyling your photo…",isVideo?"The AI is animating your image — keep this tab open (~1–3 min).":"The AI is transforming your image…");
+      var ppl={mode:isVideo?"img2vid":"img2img",prompt:raw,image_url:state.photoData,aspect_ratio:state.aspect};
+      if(isVideo)ppl.duration=state.duration;
+      var pRes=await genClip(ppl,18,96);
+      var pMedia=extractUrl(pRes);if(!pMedia)throw new Error("Finished, but no result came back.");
+      setStep(3);setProg(100,"Done!","");await sleep(300);hideLoading();renderResult(pMedia,raw||"from your photo",null);
+      showToast(isVideo?"Video from your photo ready ✦":"Image from your photo ready ✦");
+    } else if(useAudio){
       bumpUses();charge(cost);
       setStep(1);setProg(18,"Rendering HD video with sound…","Veo is generating video + real audio. ~1–2 min — keep this tab open.");
       var dlg=($("#audioDialogue").value||"").trim();
@@ -600,6 +624,33 @@ function renderResult(media,prompt,audioUrl,hasAudio){
   if(audioUrl){var d=$("#dlA");if(d)d.addEventListener("click",function(){downloadRemote(audioUrl,"visionflow-"+slug(prompt)+"-voice.mp3");});var v=$("#rv"),a=$("#ra");if(v&&a){v.addEventListener("play",function(){try{a.play();}catch(e){}});v.addEventListener("pause",function(){a.pause();});}}
 }
 async function downloadRemote(url,name){showToast("Preparing download…");try{var r=await fetch(url,{mode:"cors"});var b=await r.blob();var u=URL.createObjectURL(b);var a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},6000);showToast("Downloaded ⬇");}catch(e){window.open(url,"_blank");showToast("Opened in new tab — right-click to save.");}}
+
+/* photo upload → image-to-image / image-to-video */
+function updatePhotoHint(){
+  if(!promptEl)return;
+  if(state.photoData){promptEl.placeholder=state.mode==="video"?'How should the photo move? e.g. "gentle zoom, hair in the wind, cinematic" (optional)':'How to restyle the photo? e.g. "turn into a pixar 3D character" (optional)';}
+  else{promptEl.placeholder=state.mode==="video"?'Describe your video — e.g. "a strawberry and banana singing, pixar style"':'Describe your image — e.g. "a fox in a misty forest, golden light, photoreal"';}
+}
+(function(){
+  var drop=$("#photoDrop"),file=$("#photoFile"),prev=$("#photoPrev"),pimg=$("#photoImg"),rm=$("#photoRemove");
+  if(!drop)return;
+  drop.addEventListener("click",function(){file.click();});
+  file.addEventListener("change",function(){
+    if(!file.files||!file.files[0])return;var f=file.files[0];
+    if(!/^image\//.test(f.type)){showToast("Please choose an image file.");return;}
+    var im=new Image(),url=URL.createObjectURL(f);
+    im.onload=function(){
+      var max=1024,w=im.width,h=im.height;if(w>max||h>max){var s=max/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+      var c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);
+      state.photoData=c.toDataURL("image/jpeg",0.85);URL.revokeObjectURL(url);
+      pimg.src=state.photoData;prev.style.display="";drop.style.display="none";updatePhotoHint();
+      showToast("Photo added 📷 — pick Image or Video, then Generate");
+    };
+    im.onerror=function(){URL.revokeObjectURL(url);showToast("Couldn't read that image.");};
+    im.src=url;
+  });
+  rm.addEventListener("click",function(){state.photoData=null;file.value="";prev.style.display="none";drop.style.display="";updatePhotoHint();showToast("Photo removed");});
+})();
 
 renderChips();renderStyles();
 </script>
